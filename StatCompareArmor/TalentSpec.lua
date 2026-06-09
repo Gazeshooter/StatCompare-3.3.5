@@ -17,7 +17,7 @@ end
 
 function StatCompare_GetTalentSynopsis() 
 	local synopsis = ""
-	for _, count in StatCompare_CountSelectedTalents() do
+	for _, count in ipairs(StatCompare_CountSelectedTalents()) do
 		if synopsis ~= "" then synopsis = synopsis .. "/" .. count
 		else synopsis = count
 		end
