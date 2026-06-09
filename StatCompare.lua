@@ -1212,45 +1212,55 @@ function StatCompare_UpdateFrameText(frameName, textbody, titletext)
 end
 
 -- WotLK 3.3.5 compatibility:
--- PaperDollFrame_OnShow is no longer reliably called when the character
--- equipment panel is displayed, so hook the frame directly.
+-- PaperDollFrame_OnShow and InspectFrame_OnHide are no longer reliably
+-- called when their frames are shown or hidden, so hook the frames directly.
 
 local StatCompare_OriginalOnLoad_335 = StatCompare_OnLoad
 
 function StatCompare_OnLoad()
     StatCompare_OriginalOnLoad_335()
 
-    if StatCompare_PaperDollHooksInstalled_335 then
+    if StatCompare_FrameHooksInstalled_335 then
         return
     end
 
-    if not PaperDollFrame then
-        return
+    if PaperDollFrame then
+        PaperDollFrame:HookScript("OnShow", function(self)
+            if StatCompare_enable == 1
+                and StatCompare_GetSetting("ShowSelfFrame") == 1 then
+
+                local tiptext =
+                    StatCompare_UpdateAndGetTooltipText(StatScanner_bonuses, 1)
+
+                SCShowFrame(
+                    StatCompareSelfFrame,
+                    self,
+                    UnitName("player"),
+                    tiptext,
+                    -30,
+                    -12
+                )
+            end
+        end)
+
+        PaperDollFrame:HookScript("OnHide", function()
+            if StatCompareSelfFrame then
+                SCHideFrame(StatCompareSelfFrame)
+            end
+        end)
     end
 
-    PaperDollFrame:HookScript("OnShow", function(self)
-        if StatCompare_enable == 1
-            and StatCompare_GetSetting("ShowSelfFrame") == 1 then
+    if InspectFrame then
+        InspectFrame:HookScript("OnHide", function()
+            if StatCompareTargetFrame then
+                SCHideFrame(StatCompareTargetFrame)
+            end
 
-            local tiptext =
-                StatCompare_UpdateAndGetTooltipText(StatScanner_bonuses, 1)
+            if StatCompareSelfFrame then
+                SCHideFrame(StatCompareSelfFrame)
+            end
+        end)
+    end
 
-            SCShowFrame(
-                StatCompareSelfFrame,
-                self,
-                UnitName("player"),
-                tiptext,
-                -30,
-                -12
-            )
-        end
-    end)
-
-    PaperDollFrame:HookScript("OnHide", function()
-        if StatCompareSelfFrame then
-            SCHideFrame(StatCompareSelfFrame)
-        end
-    end)
-
-    StatCompare_PaperDollHooksInstalled_335 = true
+    StatCompare_FrameHooksInstalled_335 = true
 end
