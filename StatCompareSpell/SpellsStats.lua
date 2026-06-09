@@ -1250,18 +1250,25 @@ local function _SC_GetEstimated(bself, SpellName,SpellRank,fullstats)
 		end
   
 		-- Check for WillCrit
-		local index = 0;
-		local texture;
-		while(bself == true and GetPlayerBuffTexture(index)) do
-			texture = GetPlayerBuffTexture(index);
-			applications = GetPlayerBuffApplications(index);
-			if(texture and string.find(string.lower(texture), string.lower(SC_UNSTABLE_POWER_TEXTURE))) then
-				estimated = estimated + (70 * applications * infos.castratio * infos.levelratio);
-			elseif(texture and string.find(string.lower(texture), string.lower(SC_HEALING_OF_THE_AGES_TEXTURE))) then
-				estimated = estimated + (350 * infos.castratio * infos.levelratio);
-			end
-			index = index + 1;
-		end
+		local index = 1
+
+		while bself == true do
+    		local _, _, texture, applications = UnitBuff("player", index)
+
+    		if not texture then
+        		break
+	    end
+
+    	applications = applications or 0
+
+    	if string.find(string.lower(texture), string.lower(SC_UNSTABLE_POWER_TEXTURE)) then
+        	estimated = estimated + (70 * applications * infos.castratio * infos.levelratio)
+    	elseif string.find(string.lower(texture), string.lower(SC_HEALING_OF_THE_AGES_TEXTURE)) then
+        	estimated = estimated + (350 * infos.castratio * infos.levelratio)
+    	end
+
+    index = index + 1
+end
 
 		if(infos.tick) then
 			tickval = estimated / infos.totle;
