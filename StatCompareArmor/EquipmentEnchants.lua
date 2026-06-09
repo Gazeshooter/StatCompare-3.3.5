@@ -1619,8 +1619,8 @@ function StatCompare_strsplit(subject, delimiter)
 end
 
 function StatCompare_splitlink(link)
-	local _, _, id = string.find(link or "", "(item:%d+:%d+:%d+:%d+)")
-	return StatCompare_strsplit(id)
+  local id = (link or ""):match("(item:[^|]+)")
+  return StatCompare_strsplit(id)
 end
 
 function StatCompare_GetEnchantName(id)
