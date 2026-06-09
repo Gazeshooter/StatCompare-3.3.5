@@ -1,4 +1,4 @@
-﻿## Interface: 11200
+﻿## Interface: 30300
 ## Title: StatCompare
 ## Notes: View your character's stats; compare to others. Useful for gear checks and quick comparisons.
 ## Version: v2.0.0 Beta
