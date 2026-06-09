@@ -13,7 +13,7 @@
                 this:RegisterEvent("VARIABLES_LOADED");
             </OnLoad>
             <OnEvent>
-                StatCompare_OnEvent();
+                StatCompare_OnEvent(self, event, ...)
             </OnEvent>
         </Scripts>
     </Frame>
