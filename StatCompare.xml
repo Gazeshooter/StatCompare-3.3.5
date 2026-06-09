@@ -10,7 +10,7 @@
     <Frame name="StatCompareFrame" hidden="false" parent="UIParent">
         <Scripts>
             <OnLoad>
-                this:RegisterEvent("VARIABLES_LOADED");
+                self:RegisterEvent("VARIABLES_LOADED");
             </OnLoad>
             <OnEvent>
                 StatCompare_OnEvent(self, event, ...)
@@ -459,15 +459,15 @@
                 </Layers>
                 <Scripts>
                     <OnShow>
-                        this:SetFocus();
+                        self:SetFocus();
                     </OnShow>
                     <OnEnterPressed>
                         StatCompare_GeneralEditFrame_Save();
-                        this:GetParent():Hide();
+                        self:GetParent():Hide();
                     </OnEnterPressed>
                     <OnEscapePressed>
-                        this:SetText("");
-                        this:GetParent():Hide();
+                        self:SetText("");
+                        self:GetParent():Hide();
                     </OnEscapePressed>
                 </Scripts>
                 <FontString inherits="ChatFontNormal"/>
@@ -486,7 +486,7 @@
                 <Scripts>
                     <OnClick>
                         StatCompare_GeneralEditFrame_Save();
-                        this:GetParent():Hide();
+                        self:GetParent():Hide();
                     </OnClick>
                 </Scripts>
             </Button>
@@ -503,15 +503,15 @@
                 </Anchors>
                 <Scripts>
                     <OnClick>
-                        getglobal(this:GetParent():GetName() .. "EidtBox"):SetText("");
-                        this:GetParent():Hide();
+                        getglobal(self:GetParent():GetName() .. "EidtBox"):SetText("");
+                        self:GetParent():Hide();
                     </OnClick>
                 </Scripts>
             </Button>
         </Frames>
         <Scripts>
             <OnShow>
-                StatCompare_GeneralEditFrame_OnShow();
+                StatCompare_GeneralEditFrame_OnShow(self);
             </OnShow>
             <OnHide>
                 PlaySound("UChatScrollButton");
@@ -555,7 +555,7 @@
                 GameTooltip:Hide();
             </OnLeave>
             <OnClick>
-                StatCompare_ItemCol_Onclick();
+                StatCompare_ItemCol_Onclick(self);
             </OnClick>
         </Scripts>
     </Button>
