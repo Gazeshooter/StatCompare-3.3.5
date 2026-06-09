@@ -162,17 +162,17 @@ function StatCompareMinimapButton_UpdatePosition()
 	end
 end
 
-function StatCompareOptCheck_OnClick()
-	local value = 0;
+function StatCompareOptCheck_OnClick(self)
+    local value = 0
 
-	if(this:GetChecked()) then
-		value = 1;
-	end
-	StatCompare_SetSetting(this:GetName(), value);
+    if self:GetChecked() then
+        value = 1
+    end
+    StatCompare_SetSetting(self:GetName(), value)
 end
 
-function StatCompareOptTab_OnClick()
-	local id,i = this:GetID()
+function StatCompareOptTab_OnClick(self)
+    local id, i = self:GetID()
 	PlaySound("GAMEGENERICBUTTONPRESS")
 
 	if id and id>0 then
@@ -343,12 +343,12 @@ function StatCompare_CheckRealm()
 	end
 end
 
-function StatCompareShowMinimapOpt_OnClick()
+function StatCompareShowMinimapOpt_OnClick(self)
 	local value = 0;
 
-	if(this:GetChecked()) then
-		value = 1;
-	end
+    if self:GetChecked() then
+        value = 1
+    end
 	StatCompare_SetSetting("ShowMinimapIcon", value);
 	if(value == 0 and StatCompareMinimapFrame:IsVisible()) then
 		StatCompareMinimapFrame:Hide();
@@ -358,19 +358,19 @@ function StatCompareShowMinimapOpt_OnClick()
 	end
 end
 
-function StatCompareShowSelfFrameOpt_OnClick()
+function StatCompareShowSelfFrameOpt_OnClick(self)
 	local value = 0;
 
-	if(this:GetChecked()) then
+	if self:GetChecked() then
 		value = 1;
 	end
 	StatCompare_SetSetting("ShowSelfFrame", value);	
 end
 
-function StatCompareShowBuffBonusOpt_OnClick()
+function StatCompareShowBuffBonusOpt_OnClick(self)
 	local value = 0;
 
-	if(this:GetChecked()) then
+	if self:GetChecked() then
 		value = 1;
 	end
 	StatCompare_SetSetting("ShowBuffBonus", value);	
