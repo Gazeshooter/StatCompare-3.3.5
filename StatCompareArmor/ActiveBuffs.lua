@@ -5,7 +5,7 @@ function StatBuffs_GetBuffs(unit)
     local i = 1
 
     while true do
-        local buffIconPath, rank = UnitBuff(unit, i)
+        local _, _, buffIconPath = UnitBuff(unit, i)
 
         if not buffIconPath then
             break
