@@ -17,7 +17,7 @@
 	</Size>
 	<Scripts>
 		<OnClick>
-			StatCompareOptCheck_OnClick()
+			StatCompareOptCheck_OnClick(self)
 		</OnClick>
 	</Scripts>
 </CheckButton>
@@ -28,12 +28,12 @@
 	</Size>
 	<Scripts>
 		<OnClick>
-			StatCompareOptTab_OnClick();
+			StatCompareOptTab_OnClick(self);
 		</OnClick>
 	</Scripts>
 </Button>
 
-<Frame name="StatCompareOptFrame" toplevel="true" frameStrata="HIGH" enableMouse="true" movable="true" parent="UIParent" hidden="ture">
+<Frame name="StatCompareOptFrame" toplevel="true" frameStrata="HIGH" enableMouse="true" movable="true" parent="UIParent" hidden="true">
 	<Size>
 		<AbsDimension x="400" y="420" />
 	</Size>
@@ -808,7 +808,7 @@
 					getglobal(self:GetName().."Text"):SetText(STATCOMPARE_SHOW_BUFFBONUS);
 				  </OnLoad>
 				  <OnClick>
-					StatCompareShowBuffBonusOpt_OnClick();
+					StatCompareShowBuffBonusOpt_OnClick(self);
 				  </OnClick>
 				</Scripts>
 			</CheckButton>
@@ -825,7 +825,7 @@
 					getglobal(self:GetName().."Text"):SetText(STATCOMPARE_SHOW_SELFFRAME);
 				  </OnLoad>
 				  <OnClick>
-					StatCompareShowSelfFrameOpt_OnClick();
+					StatCompareShowSelfFrameOpt_OnClick(self);
 				  </OnClick>
 				</Scripts>
 			</CheckButton>
@@ -842,7 +842,7 @@
 					getglobal(self:GetName().."Text"):SetText(STATCOMPARE_SHOW_MINIMAP_BUTTON);
 				  </OnLoad>
 				  <OnClick>
-					StatCompareShowMinimapOpt_OnClick();
+					StatCompareShowMinimapOpt_OnClick(self);
 				  </OnClick>
 				</Scripts>
 			  </CheckButton>
@@ -873,7 +873,7 @@
 						end
 					</OnShow>
 					<OnValueChanged>
-						where = self:GetValue();
+						local where = self:GetValue();
 						getglobal(self:GetName().."Text"):SetText(STATCOMPARE_MINIMAPBUTTONPOS .. " - "..self:GetValue().."\194\176");
 						StatCompare_SetSetting("MinimapButtonPosition", where);
 						StatCompareMinimapButton_UpdatePosition();
@@ -915,7 +915,7 @@
 					self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
 				</OnLoad>
 				<OnClick>
-						if(arg1 == "RightButton") then
+						if(button == "RightButton") then
 							if(StatCompareSetsFrame) then
 								if(StatCompareSetsFrame:IsVisible()) then
 									StatCompareSetsFrame:Hide();
