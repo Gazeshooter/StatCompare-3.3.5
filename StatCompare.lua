@@ -18,7 +18,7 @@ STATCOMPARE_SETNAME_PATTERN = "^(.*)%d/(%d).*$";
 STATCOMPARE_PREFIX_PATTERN = "^%+(%d+)%%?(.*)$";
 STATCOMPARE_SUFFIX_PATTERN = "^(.*)%+(%d+)%%?$";
 
-STATCOMPARE_ITEMLINK_PATTERN = "|cff(%x+)|Hitem:(%d+:%d+:%d+:%d+)|h%[(.-)%]|h|r";
+STATCOMPARE_ITEMLINK_PATTERN = "|cff(%x+)|Hitem:([^|]+)|h%[(.-)%]|h|r";
 STATCOMPARE_DISPLAY_GROUPS = { "EquippedItems", "EquippedEnchants", "ActiveBuffs", "BasicStats", "TalentSpec", "SpellPowerStats" }
 STATCOMPARE_TEXT_INDENT1 = "    "
 STATCOMPARE_TEXT_INDENT2 = "        "
@@ -320,19 +320,19 @@ function StatCompare_SetupDressHook()
 end
 
 function StatCompare_Register(register)
-	if (register == 1) then
-		this:RegisterEvent("PLAYER_ENTERING_WORLD");
-		this:RegisterEvent("UNIT_INVENTORY_CHANGED");
-		this:RegisterEvent("PLAYER_LOGOUT");
-		this:RegisterEvent("PLAYER_ENTERING_WORLD");
-		this:RegisterEvent("UNIT_NAME_UPDATE");
-	else
-		this:UnregisterEvent("PLAYER_ENTERING_WORLD");
-		this:UnregisterEvent("UNIT_INVENTORY_CHANGED");
-		this:UnregisterEvent("PLAYER_LOGOUT");
-		this:UnregisterEvent("PLAYER_ENTERING_WORLD");
-		this:UnregisterEvent("UNIT_NAME_UPDATE");
-	end
+    local frame = StatCompareFrame
+
+    if register == 1 then
+        frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+        frame:RegisterEvent("UNIT_INVENTORY_CHANGED")
+        frame:RegisterEvent("PLAYER_LOGOUT")
+        frame:RegisterEvent("UNIT_NAME_UPDATE")
+    else
+        frame:UnregisterEvent("PLAYER_ENTERING_WORLD")
+        frame:UnregisterEvent("UNIT_INVENTORY_CHANGED")
+        frame:UnregisterEvent("PLAYER_LOGOUT")
+        frame:UnregisterEvent("UNIT_NAME_UPDATE")
+    end
 end
 
 function STATCOMPARE_SlashCmdHandler(msg)
@@ -469,8 +469,7 @@ function StatCompare_OnEvent(self, event, ...)
 end
 
 function SCDressUpItemLink(link)
-	local item = gsub(link, ".*(item:%d+:%d+:%d+:%d+).*", "%1", 1);
-	StatScanner_ScanItem(item);
+    StatScanner_ScanItem(link);
 	StatCompare_bonuses_single = StatScanner_bonuses;
 	local tiptext = StatCompare_GetTooltipText(StatCompare_bonuses_single,0);
 	SCShowFrame(StatCompareItemStatFrame,SCItemTooltip,"",tiptext,0,0);
@@ -883,28 +882,29 @@ function StatCompare_SetupItemLinkHook()
 	end
 end
 
-function StatCompare_ChatFrame_OnHyperlinkShow(link, text, button)
-	if(StatCompare_GeneralEditFrameEidtBox:IsVisible()) then
-		StatCompare_GeneralEditFrameEidtBox:SetText(text);
-	end
-	return scoldChatFrame_OnHyperlinkShow(link, text, button);
+function StatCompare_ChatFrame_OnHyperlinkShow(self, link, text, button)
+    if StatCompare_GeneralEditFrameEidtBox:IsVisible() then
+        StatCompare_GeneralEditFrameEidtBox:SetText(text)
+    end
+    return scoldChatFrame_OnHyperlinkShow(self, link, text, button)
 end
 
-function StatCompare_PaperDollItemSlotButton_OnClick(button, ignoreModifiers)
-	if(StatCompare_GeneralEditFrameEidtBox:IsVisible() and IsShiftKeyDown()) then
-		StatCompare_GeneralEditFrameEidtBox:SetText(GetInventoryItemLink("player", this:GetID()));
-	end
-	return scoldPaperDollItemSlotButton_OnClick(button, ignoreModifiers);
+function StatCompare_PaperDollItemSlotButton_OnClick(self, button)
+    if StatCompare_GeneralEditFrameEidtBox:IsVisible() and IsShiftKeyDown() then
+        StatCompare_GeneralEditFrameEidtBox:SetText(
+            GetInventoryItemLink("player", self:GetID())
+        )
+    end
+    return scoldPaperDollItemSlotButton_OnClick(self, button)
 end
 
-function StatCompare_InspectPaperDollItemSlotButton_OnClick(button)
-	if(StatCompare_GeneralEditFrameEidtBox:IsVisible() and IsShiftKeyDown()) then
-		StatCompare_GeneralEditFrameEidtBox:SetText(GetInventoryItemLink(InspectFrame.unit, this:GetID()));
-	end
-	return scoldInspectPaperDollItemSlotButton_OnClick(button);
-end
-
-function StatCompare_ItemCollectionFrame_OnLoad()
+function StatCompare_InspectPaperDollItemSlotButton_OnClick(self, button)
+    if StatCompare_GeneralEditFrameEidtBox:IsVisible() and IsShiftKeyDown() then
+        StatCompare_GeneralEditFrameEidtBox:SetText(
+            GetInventoryItemLink(InspectFrame.unit, self:GetID())
+        )
+    end
+    return scoldInspectPaperDollItemSlotButton_OnClick(self, button)
 end
 
 
@@ -921,11 +921,11 @@ function StatCompare_ItemCollection_Add_OnClick()
 	StatCompare_GeneralEditFrame:Show();
 end
 
-function StatCompare_GeneralEditFrame_OnShow()
-	local control= getglobal(this:GetName().."EditTitle");
-	control:SetText(statcompare_editdata.text);
-	StatCompare_GeneralEditFrameEidtBox:SetText(statcompare_editdata.value);
-	StatCompare_GeneralEditFrameEidtBox:HighlightText();
+function StatCompare_GeneralEditFrame_OnShow(self)
+    local control = getglobal(self:GetName().."EditTitle")
+    control:SetText(statcompare_editdata.text)
+    StatCompare_GeneralEditFrameEidtBox:SetText(statcompare_editdata.value)
+    StatCompare_GeneralEditFrameEidtBox:HighlightText()
 end
 
 function StatCompare_GeneralEditFrame_Save()
@@ -964,8 +964,8 @@ function StatCompare_DeleteItem(sItem)
 		end
 	end
 end
-function StatCompare_ItemCol_Onclick()
-	local id=this:GetID();
+function StatCompare_ItemCol_Onclick(self)
+    local id = self:GetID();
 	local button = getglobal("StatCompareItem"..id.."_Name");
 	local s=button:GetText();
 	if (s ==nil or s=="") then return; end
@@ -980,7 +980,7 @@ function StatCompare_ItemCol_Onclick()
 		StatCompare_DelItem=s;
 		StaticPopup_Show("StatCompare_DelItem");
 	elseif (text) then
-		GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 		GameTooltip:SetHyperlink(text);
 		local _,_,_,_,sType,sSubType,_ = GetItemInfo(text);
 		--DEFAULT_CHAT_FRAME:AddMessage(sType..":"..sSubType);
@@ -1038,8 +1038,8 @@ function StatCompare_ItemRarityDropDown_Initialize()
 	end
 end
 
-function StatCompare_ItemRarityDropDown_OnClick()
-	UIDropDownMenu_SetSelectedID(StatCompare_ItemRarityDropDown, this:GetID());
+function StatCompare_ItemRarityDropDown_OnClick(self)
+    UIDropDownMenu_SetSelectedID(StatCompare_ItemRarityDropDown, self:GetID());
 	StatCompare_BuildItemCache();
 	StatCompare_ItemCollection_ScrollFrame_Update();
 end
@@ -1076,8 +1076,8 @@ function StatCompare_ItemTypeDropDown_Initialize()
 	end
 end
 
-function StatCompare_ItemTypeDropDown_OnClick()
-	UIDropDownMenu_SetSelectedID(StatCompare_ItemTypeDropDown, this:GetID());
+function StatCompare_ItemTypeDropDown_OnClick(self)
+    UIDropDownMenu_SetSelectedID(StatCompare_ItemTypeDropDown, self:GetID());
 	StatCompare_BuildItemCache();
 	StatCompare_ItemCollection_ScrollFrame_Update();
 end
