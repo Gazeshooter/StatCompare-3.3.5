@@ -1210,3 +1210,47 @@ function StatCompare_UpdateFrameText(frameName, textbody, titletext)
 	frame:SetHeight(height);
 	frame:SetWidth(newwidth);
 end
+
+-- WotLK 3.3.5 compatibility:
+-- PaperDollFrame_OnShow is no longer reliably called when the character
+-- equipment panel is displayed, so hook the frame directly.
+
+local StatCompare_OriginalOnLoad_335 = StatCompare_OnLoad
+
+function StatCompare_OnLoad()
+    StatCompare_OriginalOnLoad_335()
+
+    if StatCompare_PaperDollHooksInstalled_335 then
+        return
+    end
+
+    if not PaperDollFrame then
+        return
+    end
+
+    PaperDollFrame:HookScript("OnShow", function(self)
+        if StatCompare_enable == 1
+            and StatCompare_GetSetting("ShowSelfFrame") == 1 then
+
+            local tiptext =
+                StatCompare_UpdateAndGetTooltipText(StatScanner_bonuses, 1)
+
+            SCShowFrame(
+                StatCompareSelfFrame,
+                self,
+                UnitName("player"),
+                tiptext,
+                -30,
+                -12
+            )
+        end
+    end)
+
+    PaperDollFrame:HookScript("OnHide", function()
+        if StatCompareSelfFrame then
+            SCHideFrame(StatCompareSelfFrame)
+        end
+    end)
+
+    StatCompare_PaperDollHooksInstalled_335 = true
+end
