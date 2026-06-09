@@ -805,7 +805,7 @@
 				</Anchors>
 				<Scripts>
 				  <OnLoad>
-					getglobal(this:GetName().."Text"):SetText(STATCOMPARE_SHOW_BUFFBONUS);
+					getglobal(self:GetName().."Text"):SetText(STATCOMPARE_SHOW_BUFFBONUS);
 				  </OnLoad>
 				  <OnClick>
 					StatCompareShowBuffBonusOpt_OnClick();
@@ -822,7 +822,7 @@
 				</Anchors>
 				<Scripts>
 				  <OnLoad>
-					getglobal(this:GetName().."Text"):SetText(STATCOMPARE_SHOW_SELFFRAME);
+					getglobal(self:GetName().."Text"):SetText(STATCOMPARE_SHOW_SELFFRAME);
 				  </OnLoad>
 				  <OnClick>
 					StatCompareShowSelfFrameOpt_OnClick();
@@ -839,7 +839,7 @@
 				</Anchors>
 				<Scripts>
 				  <OnLoad>
-					getglobal(this:GetName().."Text"):SetText(STATCOMPARE_SHOW_MINIMAP_BUTTON);
+					getglobal(self:GetName().."Text"):SetText(STATCOMPARE_SHOW_MINIMAP_BUTTON);
 				  </OnLoad>
 				  <OnClick>
 					StatCompareShowMinimapOpt_OnClick();
@@ -859,22 +859,22 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(this:GetName().."Text"):SetText(STATCOMPARE_MINIMAPBUTTONPOS);
-						getglobal(this:GetName().."High"):SetText();
-						getglobal(this:GetName().."Low"):SetText();
-						this:SetMinMaxValues(0, 360);
-						this:SetValueStep(1);
-						this.tooltipText = STATCOMPARE_MINIMAPBUTTON_POS_TOOLTIP;
+						getglobal(self:GetName().."Text"):SetText(STATCOMPARE_MINIMAPBUTTONPOS);
+						getglobal(self:GetName().."High"):SetText();
+						getglobal(self:GetName().."Low"):SetText();
+						self:SetMinMaxValues(0, 360);
+						self:SetValueStep(1);
+						self.tooltipText = STATCOMPARE_MINIMAPBUTTON_POS_TOOLTIP;
 					</OnLoad>
 					<OnShow>
 						local where = StatCompare_GetSetting("MinimapButtonPosition");
 						if (where) then
-							this:SetValue(where);
+							self:SetValue(where);
 						end
 					</OnShow>
 					<OnValueChanged>
-						where = this:GetValue();
-						getglobal(this:GetName().."Text"):SetText(STATCOMPARE_MINIMAPBUTTONPOS .. " - "..this:GetValue().."\194\176");
+						where = self:GetValue();
+						getglobal(self:GetName().."Text"):SetText(STATCOMPARE_MINIMAPBUTTONPOS .. " - "..self:GetValue().."\194\176");
 						StatCompare_SetSetting("MinimapButtonPosition", where);
 						StatCompareMinimapButton_UpdatePosition();
 					</OnValueChanged>
@@ -910,9 +910,9 @@
 			</Anchors>
 			<Scripts>
 				<OnLoad>
-					this.tooltip = STATCOMPARE_TOOLTIP_MINIMAP;
-					this:SetFrameLevel(5);
-					this:RegisterForClicks("LeftButtonDown", "RightButtonDown");
+					self.tooltip = STATCOMPARE_TOOLTIP_MINIMAP;
+					self:SetFrameLevel(5);
+					self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
 				</OnLoad>
 				<OnClick>
 						if(arg1 == "RightButton") then
@@ -928,8 +928,8 @@
 						end
 				</OnClick>
 				<OnEnter> 
-					GameTooltip:SetOwner(this, "ANCHOR_LEFT");
-					GameTooltip:SetText(this.tooltip);
+					GameTooltip:SetOwner(self, "ANCHOR_LEFT");
+					GameTooltip:SetText(self.tooltip);
 				</OnEnter>
 				<OnLeave>
 					GameTooltip:Hide();
