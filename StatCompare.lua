@@ -401,8 +401,10 @@ function STATCOMPARE_SlashCmdHandler(msg)
 end
 
 local StatCompare_isLoaded=0
-function StatCompare_OnEvent()
-	if( event == "VARIABLES_LOADED" ) then
+function StatCompare_OnEvent(self, event, ...)
+    local arg1 = ...
+
+    if( event == "VARIABLES_LOADED" ) then
 		if( not StatCompare_SaveVar ) then
 			StatCompare_SaveVar = { };
 			StatCompare_SaveVar["enable"]=1;
