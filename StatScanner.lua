@@ -156,7 +156,7 @@ local function _ScanForPassiveGearBonuses(line)
 			if(p.value) then
 				_SaveValueToBonuses(p.effect, p.value);
 			elseif(value) then
-				if(value=="s1")then value=10; end -- cwow°þÆ¤µ¶·­Òë´íÎó
+				if(value=="s1")then value=10; end -- cwowÂ°Ã¾Ã†Â¤ÂµÂ¶Â·Â­Ã’Ã«Â´Ã­ÃŽÃ³
 				_SaveValueToBonuses(p.effect, value);
 			end
 			found = true;
@@ -368,9 +368,8 @@ function StatScanner_ScanUnit(unit)
 		-- To parse an item's text we assign it to a tooltip, then loop through the lines of text.
 		SCObjectTooltip:Hide()
 		SCObjectTooltip:SetOwner(UIParent, "ANCHOR_NONE");
-		if (link~=nil) then
-			local item = gsub(link, ".*(item:%d+:%d+:%d+:%d+).*", "%1", 1);
-			SCObjectTooltip:SetHyperlink(item);
+		if link ~= nil then
+			SCObjectTooltip:SetHyperlink(link);
 		else
 			SCObjectTooltip:SetInventoryItem(sunit, i);
 		end
