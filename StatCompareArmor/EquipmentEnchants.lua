@@ -1746,6 +1746,56 @@ local function StatCompare_ShortenDisplayText_335(text)
 		text = string.gsub(text, replacement[1], replacement[2])
 	end
 
+	-- Tooltip capitalization is not fully consistent across WotLK gems and
+	-- server cores. Normalize common mixed-case variants as well.
+	local mixedCaseReplacements = {
+		{"Critical Strike rating", "Crit"},
+		{"critical strike rating", "Crit"},
+		{"Armor Penetration rating", "ArP"},
+		{"armor penetration rating", "ArP"},
+		{"Attack power", "AP"},
+		{"attack power", "AP"},
+		{"Ranged Attack power", "RAP"},
+		{"ranged attack power", "RAP"},
+		{"Spell power", "SP"},
+		{"spell power", "SP"},
+		{"Hit rating", "Hit"},
+		{"hit rating", "Hit"},
+		{"Haste rating", "Haste"},
+		{"haste rating", "Haste"},
+		{"Expertise rating", "Expertise"},
+		{"expertise rating", "Expertise"},
+		{"Resilience rating", "Resil"},
+		{"resilience rating", "Resil"},
+		{"Defense rating", "Defense"},
+		{"defense rating", "Defense"},
+		{"Dodge rating", "Dodge"},
+		{"dodge rating", "Dodge"},
+		{"Parry rating", "Parry"},
+		{"parry rating", "Parry"},
+		{"Block rating", "Block"},
+		{"block rating", "Block"},
+	}
+
+	for _, replacement in ipairs(mixedCaseReplacements) do
+		text = string.gsub(text, replacement[1], replacement[2])
+	end
+
+	-- Standardize compact abbreviations and restore omitted plus signs in
+	-- multi-stat gem lines such as: +30SP, 20 Critical Strike rating.
+	local compactStatLabels = {
+		"Spell Pen", "Expertise", "Defense", "Haste", "Resil", "Dodge",
+		"Parry", "Block", "Crit", "Hit", "ArP", "RAP", "AP", "SP",
+		"Agi", "Str", "Sta", "Int", "Spi", "MP5", "HP5",
+	}
+
+	for _, label in ipairs(compactStatLabels) do
+		text = string.gsub(text, "(%+?%d+)%s*"..label, "%1 "..label)
+		text = string.gsub(text, "^%s*(%d+)%s+"..label, "+%1 "..label)
+		text = string.gsub(text, ",%s*(%d+)%s+"..label, ", +%1 "..label)
+		text = string.gsub(text, " and%s+(%d+)%s+"..label, " and +%1 "..label)
+	end
+
 	-- Compact common WotLK meta-gem wording. Keep the meaning intact while
 	-- avoiding long tooltip phrases that unnecessarily widen the gear panel.
 	text = string.gsub(text, "(%d+%%) Increased Critical Damage", "+%1 Crit Damage")
@@ -1763,6 +1813,17 @@ local function StatCompare_ShortenDisplayText_335(text)
 	text = string.gsub(text, "Chance to restore mana on spellcast", "Mana Restore Proc")
 	text = string.gsub(text, "Sometimes Heal on Your Crits", "Crit Heal Proc")
 	text = string.gsub(text, "Chance to Increase Melee/Ranged Attack Speed", "Attack Speed Proc")
+
+	-- The same meta effects can appear with different capitalization.
+	text = string.gsub(text, "(%d+%%) [Ii]ncreased [Cc]ritical [Dd]amage", "+%1 Crit Damage")
+	text = string.gsub(text, "(%d+%%) [Ii]ncreased [Cc]ritical [Hh]ealing [Ee]ffect", "+%1 Crit Healing")
+	text = string.gsub(text, "(%d+%%) [Ii]ncreased [Aa]rmor [Vv]alue from [Ii]tems", "+%1 Armor from Items")
+	text = string.gsub(text, "(%d+%%) [Rr]educed [Tt]hreat", "-%1 Threat")
+	text = string.gsub(text, "[Rr]educe[s]? [Ss]pell [Dd]amage [Tt]aken by (%d+%%)", "-%1 Spell Damage Taken")
+	text = string.gsub(text, "[Rr]educe[s]? [Ss]nare/[Rr]oot [Dd]uration by (%d+%%)", "-%1 Snare/Root Duration")
+	text = string.gsub(text, "[Ss]ilence [Dd]uration [Rr]educed by (%d+%%)", "-%1 Silence Duration")
+	text = string.gsub(text, "[Ff]ear [Dd]uration [Rr]educed by (%d+%%)", "-%1 Fear Duration")
+	text = string.gsub(text, "[Ss]tun [Dd]uration [Rr]educed by (%d+%%)", "-%1 Stun Duration")
 
 	-- Compact joined stat lists while leaving named effects untouched.
 	if string.find(text, "%+%d+") and string.find(text, " and ", 1, true) then
@@ -1966,6 +2027,20 @@ local function StatCompare_GetTimedEnchantOverride_335(enchantId, unit)
 	)
 end
 
+local StatCompare_EnchantSummaryOverrides_335 = {
+	-- Common named weapon enchants whose item tooltip often exposes only the
+	-- enchant name. Keep summaries short enough for the equipment panel.
+	[2673] = "Mongoose (Proc: +120 Agi, +30 Haste 15sec.)",
+	[2674] = "Spellsurge (Proc: Restore 100 Mana to Nearby Party)",
+	[2675] = "Battlemaster (Proc: Heal Nearby Party 180-300)",
+	[3225] = "Executioner (Proc: +120 ArP 15sec.)",
+	[3273] = "Deathfrost (Proc: Frost Dmg, Slow Target)",
+	[3789] = "Berserking (Proc: +400 AP, -5% Armor 15sec.)",
+	[3790] = "Black Magic (Proc: +250 Haste 10sec.)",
+	[3869] = "Blade Ward (Proc: +200 Parry 10sec., Next Parry 600-800 Dmg)",
+	[3870] = "Blood Draining (Proc: Blood Reserve; <35% HP Heal 360-440/stack, x5)",
+}
+
 local StatCompare_RuneforgeNames_335 = {
 	[3365] = "Swordshattering (+4% Parry, -50% Disarm Duration)",
 	[3366] = "Lichbane (+2% Fire Weapon Dmg, +4% vs Undead)",
@@ -1988,6 +2063,9 @@ function StatCompare_GetResolvedEnchantText(link, enchantId, unit)
 	-- characters. Resolve the known WotLK runeforge enchant IDs explicitly.
 	local runeforgeName = StatCompare_RuneforgeNames_335[id]
 	if runeforgeName then return runeforgeName end
+
+	local enchantSummary = StatCompare_EnchantSummaryOverrides_335[id]
+	if enchantSummary then return enchantSummary end
 
 	local timedOverride = StatCompare_GetTimedEnchantOverride_335(id, unit)
 	if timedOverride then return timedOverride end
