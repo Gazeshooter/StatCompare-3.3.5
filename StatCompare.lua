@@ -461,20 +461,33 @@ function StatCompare_OnEvent(self, event, ...)
 	end
 	if ( (event == "UNIT_INVENTORY_CHANGED") and StatCompare_enable and StatCompare_isLoaded==1) then
 		if ((arg1 == "player") and StatCompareSelfFrame:IsVisible()) then
-			SCHideFrame(StatCompareSelfFrame);
+			-- Refresh the visible player panel in place. Calling SCShowFrame() here
+			-- would re-anchor it beside PaperDollFrame or StatCompareTargetFrame,
+			-- discarding any position chosen by the user.
 			local tiptext = StatCompare_UpdateAndGetTooltipText(StatScanner_bonuses,1);
-			if (StatCompareTargetFrame:IsVisible()) then
-				SCShowFrame(StatCompareSelfFrame,StatCompareTargetFrame,UnitName("player"),tiptext,0,0);
-			else
-				SCShowFrame(StatCompareSelfFrame,PaperDollFrame,UnitName("player"),tiptext,-30,-12);
-			end
+			StatCompare_UpdateFrameContent(
+				StatCompareSelfFrame:GetName(),
+				tiptext,
+				"player",
+				UnitName("player")
+			);
 		elseif ((arg1 == "target") and StatCompare_enable and StatCompare_isLoaded==1 and StatCompareTargetFrame:IsVisible()) then
-			SCHideFrame(StatCompareTargetFrame);
+			-- Preserve manually moved inspect-panel positions during live rescans.
 			local tiptext = StatCompare_UpdateAndGetTooltipText(StatScanner_bonuses,0);
-			SCShowFrame(StatCompareTargetFrame,InspectFrame,UnitName("target"),tiptext,-5,-12);
+			StatCompare_UpdateFrameContent(
+				StatCompareTargetFrame:GetName(),
+				tiptext,
+				"target",
+				UnitName("target")
+			);
 
 			tiptext = StatCompare_UpdateAndGetTooltipText(StatScanner_bonuses,1);
-			SCShowFrame(StatCompareSelfFrame,StatCompareTargetFrame,UnitName("player"),tiptext,0,0);
+			StatCompare_UpdateFrameContent(
+				StatCompareSelfFrame:GetName(),
+				tiptext,
+				"player",
+				UnitName("player")
+			);
 		end
 	elseif ( event == "PLAYER_LOGOUT" ) then
 		-- save the player settings
