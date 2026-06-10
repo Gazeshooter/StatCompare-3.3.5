@@ -1859,7 +1859,9 @@ local function StatCompare_IsGemMetadataLine_335(text, gemName)
 	if text == "Gem" then return true end
 	if string.find(text, "^Item Level") then return true end
 	if string.find(text, "^Requires") then return true end
-	if string.find(text, "^Matches a ") then return true end
+	-- Some 3.3.5 clients wrap this helper text in quotation marks, for
+	-- example: "Matches a Red Socket."  Match it anywhere in the line.
+	if string.find(text, "Matches a ", 1, true) then return true end
 	if string.find(text, "^Unique") then return true end
 	if string.find(text, "^Sell Price") then return true end
 	if string.find(text, "^Socket") then return true end
