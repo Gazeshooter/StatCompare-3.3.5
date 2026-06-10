@@ -592,6 +592,17 @@ function SCShowFrame(frame,target,tiptitle,tiptext,anchorx,anchory)
 			frame:Hide();
 		else
 			frame:Show();
+
+			-- On the first open, the frame's XML layout can finish after the
+			-- pre-show size calculation and expand the panel again. Run one final
+			-- content/layout pass after Show() so initial display uses the same
+			-- correct dimensions later produced by an equipment-change refresh.
+			StatCompare_UpdateFrameContent(
+				frame:GetName(),
+				tiptext,
+				unit,
+				tiptitle
+			)
 		end
 	end
 end
