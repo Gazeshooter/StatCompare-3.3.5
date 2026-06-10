@@ -1548,6 +1548,7 @@ StatCompare_EnchantsById = {
 	[2720] = { ["enchantId"] = "2720", ["effect"] = "Greater Ward of Shielding" },
 	[2721] = { ["enchantId"] = "2721", ["effect"] = "+15 Spell Power and +14 Critical Strike Rating" },
 	[3222] = { ["enchantId"] = "3222", ["effect"] = "+20 Agility" },
+	[3370] = { ["enchantId"] = "3370", ["effect"] = "Rune of Razorice" },
 	[3604] = { ["enchantId"] = "3604", ["effect"] = "Hyperspeed Accelerators" },
 	[3605] = { ["enchantId"] = "3605", ["effect"] = "Flexweave Underlay (+23 Agility)" },
 	[3606] = { ["enchantId"] = "3606", ["effect"] = "Nitro Boosts (+24 Critical Strike Rating)" },
