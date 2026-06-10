@@ -1548,7 +1548,7 @@ StatCompare_EnchantsById = {
 	[2720] = { ["enchantId"] = "2720", ["effect"] = "Greater Ward of Shielding" },
 	[2721] = { ["enchantId"] = "2721", ["effect"] = "+15 Spell Power and +14 Critical Strike Rating" },
 	[3222] = { ["enchantId"] = "3222", ["effect"] = "+20 Agility" },
-	[3370] = { ["enchantId"] = "3370", ["effect"] = "Rune of Razorice" },
+	[3370] = { ["enchantId"] = "3370", ["effect"] = "Razorice" },
 	[3604] = { ["enchantId"] = "3604", ["effect"] = "Hyperspeed Accelerators" },
 	[3605] = { ["enchantId"] = "3605", ["effect"] = "Flexweave Underlay (+23 Agility)" },
 	[3606] = { ["enchantId"] = "3606", ["effect"] = "Nitro Boosts (+24 Critical Strike Rating)" },
@@ -1966,9 +1966,28 @@ local function StatCompare_GetTimedEnchantOverride_335(enchantId, unit)
 	)
 end
 
+local StatCompare_RuneforgeNames_335 = {
+	[3365] = "Swordshattering (+4% Parry, -50% Disarm Duration)",
+	[3366] = "Lichbane (+2% Fire Weapon Dmg, +4% vs Undead)",
+	[3367] = "Spellshattering (-4% Spell Dmg Taken, -50% Silence Duration)",
+	[3368] = "Fallen Crusader (Proc: Heal 3%, +15% Str 15sec.)",
+	[3369] = "Cinderglacier (Proc: +20% Next 2 Frost/Shadow Attacks)",
+	[3370] = "Razorice (+2% Frost Weapon Dmg, Frost Vulnerability)",
+	[3594] = "Swordbreaking (+2% Parry, -50% Disarm Duration)",
+	[3595] = "Spellbreaking (-2% Spell Dmg Taken, -50% Silence Duration)",
+	[3847] = "Stoneskin Gargoyle (+25 Defense, +2% Sta)",
+	[3883] = "Nerubian Carapace (+13 Defense, +1% Sta)",
+}
+
 function StatCompare_GetResolvedEnchantText(link, enchantId, unit)
 	local id = tonumber(enchantId)
 	if not id or id <= 0 then return nil end
+
+	-- Death Knight runeforges are permanent weapon enchants, but their visible
+	-- tooltip differences are not always complete or consistent on inspected
+	-- characters. Resolve the known WotLK runeforge enchant IDs explicitly.
+	local runeforgeName = StatCompare_RuneforgeNames_335[id]
+	if runeforgeName then return runeforgeName end
 
 	local timedOverride = StatCompare_GetTimedEnchantOverride_335(id, unit)
 	if timedOverride then return timedOverride end
