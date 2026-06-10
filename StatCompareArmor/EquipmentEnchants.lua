@@ -2005,6 +2005,43 @@ function StatCompare_GetSocketedGemDisplayText(link)
 	return result
 end
 
+local StatCompare_DisplaySlotNames_335 = {
+	[1] = "Head",
+	[3] = "Shoulders",
+	[7] = "Legs",
+	[10] = "Hands",
+	[11] = "Ring",
+	[12] = "Ring",
+	[15] = "Back",
+	[16] = "Main Hand",
+	[17] = "Off Hand",
+	[18] = "Ranged",
+}
+
+local function StatCompare_GetAmmoDpsText_335(unit)
+	if not GetInventoryItemLink then return nil end
+
+	local ammoSlot = 0
+	if GetInventorySlotInfo then
+		ammoSlot = GetInventorySlotInfo("AmmoSlot") or ammoSlot
+	end
+
+	local ammoLink = GetInventoryItemLink(unit, ammoSlot)
+	if not ammoLink then return nil end
+
+	for _, text in ipairs(StatCompare_ReadTooltipLines_335(ammoLink)) do
+		local lower = string.lower(text)
+		local dps = string.match(lower, "adds%s+([%d%.]+)%s+damage%s+per%s+second")
+			or string.match(lower, "([%d%.]+)%s+damage%s+per%s+second")
+
+		if dps then
+			return "+"..dps.." DPS"
+		end
+	end
+
+	return nil
+end
+
 function StatCompare_GetEquippedItemNamesAndEnchantsDisplayText(unit)
 	local sunit = unit or "target"
 	local retstr = GREEN_FONT_COLOR_CODE..STATCOMPARE_EQUIPPED..":\n"..FONT_COLOR_CODE_CLOSE
@@ -2012,20 +2049,37 @@ function StatCompare_GetEquippedItemNamesAndEnchantsDisplayText(unit)
 
 	for _, i in ipairs(DISPLAYORDER) do
 		if i ~= 99 then
-			local slotname = STATCOMPARE_UNITSLOT[i]
+			local slotname = StatCompare_DisplaySlotNames_335[i] or STATCOMPARE_UNITSLOT[i]
 			local link = GetInventoryItemLink(sunit, i)
 
 			if link then
 				local _, itemId, enchantId = StatCompare_splitlink(link)
+				local suffixParts = {}
+
+				if i == 18 then
+					local ammoDps = StatCompare_GetAmmoDpsText_335(sunit)
+					if ammoDps then
+						table.insert(suffixParts, ammoDps)
+					end
+				end
+
 				local enchantName = StatCompare_GetResolvedEnchantText(link, enchantId)
-				local enchantstr = enchantName
-					and " > "..enchantName
-					or (enchantId and tonumber(enchantId) > 0
-						and " > Unknown Enchant - "..GREEN_FONT_COLOR_CODE..enchantId..FONT_COLOR_CODE_CLOSE
-						or "")
+				if enchantName then
+					table.insert(suffixParts, enchantName)
+				elseif enchantId and tonumber(enchantId) > 0 then
+					table.insert(
+						suffixParts,
+						"Unknown Enchant - "..GREEN_FONT_COLOR_CODE..enchantId..FONT_COLOR_CODE_CLOSE
+					)
+				end
+
+				local suffix = ""
+				if table.getn(suffixParts) > 0 then
+					suffix = " > "..table.concat(suffixParts, ", ")
+				end
 
 				if StatCompare_IsDebugMode then
-					enchantstr = enchantstr
+					suffix = suffix
 						..(enchantId and tonumber(enchantId) > 0
 							and " (ID:"..GREEN_FONT_COLOR_CODE..enchantId..FONT_COLOR_CODE_CLOSE..")"
 							or "")
@@ -2035,7 +2089,7 @@ function StatCompare_GetEquippedItemNamesAndEnchantsDisplayText(unit)
 					.."  "
 					..StatComparePaintText("X", (slotname and slotname or "?")..": ")
 					..link
-					..enchantstr
+					..suffix
 					.."\n"
 
 				retstr = retstr..StatCompare_GetSocketedGemDisplayText(link)
