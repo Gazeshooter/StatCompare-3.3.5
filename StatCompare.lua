@@ -841,13 +841,31 @@ function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "HITRATING", CR_HIT_RANGED or 7)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "CRITRATING", CR_CRIT_RANGED or 10, true)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "HASTERATING", CR_HASTE_RANGED or 19, true)
-		StatCompare_SetExactRating_335(baseval, exactDisplay, "ARMORPENRATING", CR_ARMOR_PENETRATION or 25)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "ARMORPENRATING", CR_ARMOR_PENETRATION or 25, true)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "EXPERTISERATING", CR_EXPERTISE or 24)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "RESILIENCERATING", CR_CRIT_TAKEN_MELEE or 15)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "DEFENSERATING", CR_DEFENSE_SKILL or 2)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "DODGERATING", CR_DODGE or 3)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "PARRYRATING", CR_PARRY or 4)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "BLOCKRATING", CR_BLOCK or 5)
+
+		-- Ranged-only crit rating is scanned from effects such as scopes rather
+		-- than returned as a standalone Blizzard API total. Convert that scanned
+		-- component using the player's current ranged-crit rating conversion.
+		local rangedOnlyCritRating = tonumber(bonuses["RANGEDCRITRATING"])
+		if rangedOnlyCritRating and rangedOnlyCritRating ~= 0 then
+			local totalRangedCritRating = GetCombatRating(CR_CRIT_RANGED or 10) or 0
+			local totalRangedCritBonus = GetCombatRatingBonus(CR_CRIT_RANGED or 10) or 0
+			local rangedOnlyCritBonus = 0
+
+			if totalRangedCritRating > 0 then
+				rangedOnlyCritBonus =
+					rangedOnlyCritRating * totalRangedCritBonus / totalRangedCritRating
+			end
+
+			exactDisplay["RANGEDCRITRATING"] =
+				format("+%d (%.2f%%)", rangedOnlyCritRating, rangedOnlyCritBonus)
+		end
 	end
 	--DEFAULT_CHAT_FRAME:AddMessage("Entering GetTooltipText");
 	for i,e in pairs(STATCOMPARE_EFFECTS) do
