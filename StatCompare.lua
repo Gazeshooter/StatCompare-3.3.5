@@ -578,6 +578,43 @@ function StatCompare_GetTitlebarText(prefix)
 	return (prefix and prefix .. " / " or "")..GREEN_FONT_COLOR_CODE..STATCOMPARE_ADDON_NAME..FONT_COLOR_CODE_CLOSE.." "..STATCOMPARE_ADDON_VERSION
 end
 
+local StatCompare_DeferredLayoutFrame_335
+local StatCompare_DeferredLayouts_335 = {}
+
+local function StatCompare_QueueDeferredLayout_335(frameName, tiptext, unit, tiptitle)
+	if not StatCompare_DeferredLayoutFrame_335 then
+		StatCompare_DeferredLayoutFrame_335 = CreateFrame("Frame")
+		StatCompare_DeferredLayoutFrame_335:Hide()
+		StatCompare_DeferredLayoutFrame_335:SetScript("OnUpdate", function(self)
+			self:Hide()
+
+			local pending = StatCompare_DeferredLayouts_335
+			StatCompare_DeferredLayouts_335 = {}
+
+			for _, layout in pairs(pending) do
+				local targetFrame = getglobal(layout.frameName)
+				if targetFrame and targetFrame:IsShown() then
+					StatCompare_UpdateFrameContent(
+						layout.frameName,
+						layout.tiptext,
+						layout.unit,
+						layout.tiptitle
+					)
+				end
+			end
+		end)
+	end
+
+	StatCompare_DeferredLayouts_335[frameName] = {
+		frameName = frameName,
+		tiptext = tiptext,
+		unit = unit,
+		tiptitle = tiptitle
+	}
+
+	StatCompare_DeferredLayoutFrame_335:Show()
+end
+
 function SCShowFrame(frame,target,tiptitle,tiptext,anchorx,anchory)
 	local unit = target:GetName() == "InspectFrame" and "target" or "player"
 
@@ -606,11 +643,10 @@ function SCShowFrame(frame,target,tiptitle,tiptext,anchorx,anchory)
 		else
 			frame:Show();
 
-			-- On the first open, the frame's XML layout can finish after the
-			-- pre-show size calculation and expand the panel again. Run one final
-			-- content/layout pass after Show() so initial display uses the same
-			-- correct dimensions later produced by an equipment-change refresh.
-			StatCompare_UpdateFrameContent(
+			-- The frame template can apply its initial layout after Show() returns.
+			-- Refresh once on the next rendered frame so first-open dimensions match
+			-- the compact dimensions already produced by later inventory updates.
+			StatCompare_QueueDeferredLayout_335(
 				frame:GetName(),
 				tiptext,
 				unit,
