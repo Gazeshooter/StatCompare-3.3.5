@@ -1398,16 +1398,160 @@ function StatCompareTargetFrameSpellsButton_OnClick()
 	StatCompare_UpdateDisplayedAttributeGroups({"SpellPowerStats"}, "StatCompareTargetFrameSpellsButton", "StatCompareTargetFrame", "target")
 end
 
+local StatCompare_GetMeasureFontString_335
+local StatCompare_GetVisibleWidth_335
+
+local StatCompare_ItemLinkButtons_335 = {}
+
+local function StatCompare_HideItemTooltip_335(button)
+	if GameTooltip and GameTooltip.IsOwned and GameTooltip:IsOwned(button) then
+		GameTooltip:Hide()
+	end
+end
+
+local function StatCompare_ShowItemTooltip_335(button)
+	if not button or not button.StatCompareFullLink then return end
+
+	GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+	GameTooltip:SetHyperlink(button.StatCompareFullLink)
+	GameTooltip:Show()
+end
+
+local function StatCompare_ClickItemLink_335(button, mouseButton)
+	if not button or not button.StatCompareFullLink then return end
+
+	-- Preserve Blizzard's normal modified-click behaviour:
+	-- Shift-click inserts a chat link and Ctrl-click opens the dressing room
+	-- where the item is previewable.
+	if HandleModifiedItemClick and HandleModifiedItemClick(button.StatCompareFullLink) then
+		return
+	end
+
+	-- Normal clicking opens the persistent item-reference tooltip, matching a
+	-- clicked chat item link.
+	if SetItemRef then
+		SetItemRef(
+			button.StatCompareLinkData or button.StatCompareFullLink,
+			button.StatCompareFullLink,
+			mouseButton,
+			button
+		)
+	end
+end
+
+local function StatCompare_GetOrCreateItemLinkButton_335(frameName, index)
+	local pool = StatCompare_ItemLinkButtons_335[frameName]
+	if not pool then
+		pool = {}
+		StatCompare_ItemLinkButtons_335[frameName] = pool
+	end
+
+	local button = pool[index]
+	if not button then
+		local frame = getglobal(frameName)
+		button = CreateFrame("Button", nil, frame)
+		button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+		button:SetFrameLevel(frame:GetFrameLevel() + 20)
+		button:SetScript("OnEnter", StatCompare_ShowItemTooltip_335)
+		button:SetScript("OnLeave", StatCompare_HideItemTooltip_335)
+		button:SetScript("OnHide", StatCompare_HideItemTooltip_335)
+		button:SetScript("OnClick", StatCompare_ClickItemLink_335)
+		pool[index] = button
+	end
+
+	return button
+end
+
+local function StatCompare_HideUnusedItemLinkButtons_335(frameName, usedCount)
+	local pool = StatCompare_ItemLinkButtons_335[frameName]
+	if not pool then return end
+
+	for index = usedCount + 1, table.getn(pool) do
+		pool[index]:Hide()
+	end
+end
+
+local function StatCompare_GetBodyLineHeight_335()
+	local measure = StatCompare_GetMeasureFontString_335(false)
+	measure:SetText("Ag")
+	local height = measure.GetStringHeight and measure:GetStringHeight()
+		or measure:GetHeight()
+		or 12
+	measure:SetText("")
+
+	if height < 10 then height = 10 end
+	return math.ceil(height)
+end
+
+local function StatCompare_UpdateItemLinkButtons_335(frameName, textbody)
+	local textFrame = getglobal(frameName.."Text")
+	if not textFrame then return end
+
+	local lineHeight = StatCompare_GetBodyLineHeight_335()
+	local usedCount = 0
+	local lineNumber = 0
+
+	for line in string.gmatch((textbody or "").."\n", "(.-)\n") do
+		lineNumber = lineNumber + 1
+		local searchFrom = 1
+
+		while true do
+			local startPos, endPos, fullLink, linkData, visibleLabel =
+				string.find(
+					line,
+					"(|c%x%x%x%x%x%x%x%x|H([^|]+)|h(.-)|h|r)",
+					searchFrom
+				)
+
+			if not startPos then
+				startPos, endPos, fullLink, linkData, visibleLabel =
+					string.find(
+						line,
+						"(|H([^|]+)|h(.-)|h)",
+						searchFrom
+					)
+			end
+
+			if not startPos then break end
+
+			-- Equipment and gem links are item links. Ignore any future spell
+			-- or quest hyperlinks that may be added to the text body.
+			if string.find(linkData or "", "^item:") then
+				usedCount = usedCount + 1
+
+				local prefix = string.sub(line, 1, startPos - 1)
+				local x = math.floor(StatCompare_GetVisibleWidth_335(prefix, false))
+				local width = math.ceil(StatCompare_GetVisibleWidth_335(visibleLabel or "", false))
+				local y = -((lineNumber - 1) * lineHeight)
+
+				local button = StatCompare_GetOrCreateItemLinkButton_335(frameName, usedCount)
+				button:ClearAllPoints()
+				button:SetPoint("TOPLEFT", textFrame, "TOPLEFT", x, y)
+				button:SetWidth(math.max(width, 8))
+				button:SetHeight(lineHeight)
+				button.StatCompareFullLink = fullLink
+				button.StatCompareLinkData = linkData
+				button:Show()
+			end
+
+			searchFrom = endPos + 1
+		end
+	end
+
+	StatCompare_HideUnusedItemLinkButtons_335(frameName, usedCount)
+end
+
 function StatCompare_UpdateFrameContent(frameName, textbody, unit, tiptitle)
 	local titletext = StatCompare_GetTitlebarText(tiptitle)
 	StatCompare_UpdateFrameText(frameName, textbody, titletext)
 	StatBuffs_UpdateBuffs(frameName, unit)
+	StatCompare_UpdateItemLinkButtons_335(frameName, textbody)
 end
 
 local StatCompare_MeasureBodyText_335
 local StatCompare_MeasureTitleText_335
 
-local function StatCompare_GetMeasureFontString_335(isTitle)
+StatCompare_GetMeasureFontString_335 = function(isTitle)
 	if isTitle then
 		if not StatCompare_MeasureTitleText_335 then
 			StatCompare_MeasureTitleText_335 =
@@ -1440,7 +1584,7 @@ local function StatCompare_GetVisibleText_335(value)
 	return visible
 end
 
-local function StatCompare_GetVisibleWidth_335(value, isTitle)
+StatCompare_GetVisibleWidth_335 = function(value, isTitle)
 	local measure = StatCompare_GetMeasureFontString_335(isTitle)
 	local visible = StatCompare_GetVisibleText_335(value)
 	local widest = 0
