@@ -403,4 +403,3 @@ function SC_Localization_enUS()
 	STATCOMPARE_SHADOWBURN		= "Shadow Burn";
 	STATCOMPARE_SOUL_FIRE		= "Soul Fire";
 end
-
