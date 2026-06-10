@@ -50,8 +50,9 @@ function SC_Localization_enUS()
 	STATCOMPARE_CAT_RES = "Resistance";
 	STATCOMPARE_CAT_MISC = "Misc";
 	STATCOMPARE_CAT_SKILL = "Skills";
-	STATCOMPARE_CAT_BON = "Attack Stats";
-	STATCOMPARE_CAT_SBON = "Spells";
+	STATCOMPARE_CAT_BON = "Combat Stats";
+	STATCOMPARE_CAT_SBON = "Spell Stats";
+	STATCOMPARE_CAT_DEF = "Defense Stats";
 	STATCOMPARE_CAT_OBON = "Health & Mana";
 	STATCOMPARE_EQUIPPED = "Equipped Items";
 	STATCOMPARE_ACTIVEBUFFS = "Active Buffs";
