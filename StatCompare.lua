@@ -1220,33 +1220,61 @@ function StatCompare_UpdateFrameContent(frameName, textbody, unit, tiptitle)
 	StatBuffs_UpdateBuffs(frameName, unit)
 end
 
+local function StatCompare_GetRenderedStringWidth(fontString)
+	if fontString and fontString.GetStringWidth then
+		return fontString:GetStringWidth() or 0
+	end
+	return fontString and fontString:GetWidth() or 0
+end
+
+local function StatCompare_GetRenderedStringHeight(fontString)
+	if fontString and fontString.GetStringHeight then
+		return fontString:GetStringHeight() or 0
+	end
+	return fontString and fontString:GetHeight() or 0
+end
+
 function StatCompare_UpdateFrameText(frameName, textbody, titletext)
-	local frame = getglobal(frameName);
-	local text = getglobal(frameName.."Text");
-	local title = getglobal(frameName.."Title");
-	local buffFrame = getglobal(frame:GetName().."BuffList")
-	local paddingHeightForAesthetics = 20; -- Without this, the content stopped precisely against the words on the bottom.
-	local paddingWidthForAesthetics = 40;  -- Without this, the content stopped precisely against the words on the right.
-	text:SetText(textbody);
-	if (titletext ~= nil) then
+	local frame = getglobal(frameName)
+	local text = getglobal(frameName.."Text")
+	local title = getglobal(frameName.."Title")
+
+	text:SetText(textbody or "")
+	if titletext ~= nil then
 		title:SetText(titletext)
 	end
-	local height = text:GetHeight() + title:GetHeight() + paddingHeightForAesthetics;
-	local newwidth = text:GetWidth() + paddingWidthForAesthetics;
-	-- Allow the frame to shrink again after displaying a character with a
-	-- longer line. The original code only ever increased the width, leaving
-	-- persistent blank space after compact socket details were introduced.
-	local minimumFrameWidth = 350;
-	if newwidth < minimumFrameWidth then
-		newwidth = minimumFrameWidth
-	end
-	local iconwidth = 20*4;
-	local titlewidth = title:GetWidth() + iconwidth;
-	if(newwidth < titlewidth) then
-		newwidth = titlewidth
-	end
-	frame:SetHeight(height);
-	frame:SetWidth(newwidth);
+
+	-- The text FontString is anchored 10 px from the left and 20 px from the
+	-- top. Measure the rendered strings rather than the previous widget width,
+	-- so the frame can both grow and shrink exactly with its current content.
+	local leftInset = 10
+	local rightInset = 10
+	local topInset = 20
+	local bottomInset = 10
+
+	-- Reserve enough room for the close button and the three small header
+	-- buttons without forcing a wide empty panel.
+	local titleBarButtonsWidth = 86
+	local minimumFrameWidth = 250
+	local minimumFrameHeight = 50
+
+	local textWidth = math.ceil(StatCompare_GetRenderedStringWidth(text))
+	local titleWidth = math.ceil(StatCompare_GetRenderedStringWidth(title))
+	local textHeight = math.ceil(StatCompare_GetRenderedStringHeight(text))
+
+	local frameWidth = math.max(
+		minimumFrameWidth,
+		textWidth + leftInset + rightInset,
+		titleWidth + leftInset + titleBarButtonsWidth
+	)
+
+	local frameHeight = math.max(
+		minimumFrameHeight,
+		topInset + textHeight + bottomInset
+	)
+
+	frame:SetWidth(frameWidth)
+	frame:SetHeight(frameHeight)
 end
 
 -- WotLK 3.3.5 compatibility:
