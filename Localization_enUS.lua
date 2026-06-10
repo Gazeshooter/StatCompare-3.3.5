@@ -50,13 +50,13 @@ function SC_Localization_enUS()
 	STATCOMPARE_CAT_RES = "Resistance";
 	STATCOMPARE_CAT_MISC = "Misc";
 	STATCOMPARE_CAT_SKILL = "Skills";
-	STATCOMPARE_CAT_BON = "Melee & Ranged Attack";
+	STATCOMPARE_CAT_BON = "Attack Stats";
 	STATCOMPARE_CAT_SBON = "Spells";
 	STATCOMPARE_CAT_OBON = "Health & Mana";
 	STATCOMPARE_EQUIPPED = "Equipped Items";
 	STATCOMPARE_ACTIVEBUFFS = "Active Buffs";
 	STATCOMPARE_ATTACKNAME = "Attack";
-	STATCOMPARE_TALENT_SPECIALIZATION="Talent Spec"
+	STATCOMPARE_TALENT_SPECIALIZATION="Talents"
 
 	STATCOMPARE_TUTORIAL_NOTE_ICON=[["Note" icon shows stats/resists/crit chance, etc.]]
 
@@ -107,10 +107,10 @@ function SC_Localization_enUS()
 	STATCOMPARE_RANGEDCRIT	= "Crit. Shots";
 	STATCOMPARE_TOHIT	= "Chance to Hit";
 	-- WotLK 3.3.5 rating names
-	STATCOMPARE_HITRATING = "Hit Rating";
-	STATCOMPARE_CRITRATING = "Critical Strike Rating";
-	STATCOMPARE_HASTERATING = "Haste Rating";
-	STATCOMPARE_ARMORPENRATING = "Armor Penetration Rating";
+	STATCOMPARE_HITRATING = "Hit";
+	STATCOMPARE_CRITRATING = "Critical Strike";
+	STATCOMPARE_HASTERATING = "Haste";
+	STATCOMPARE_ARMORPENRATING = "Armor Penetration";
 	STATCOMPARE_EXPERTISERATING = "Expertise Rating";
 	STATCOMPARE_RESILIENCERATING = "Resilience Rating";
 	STATCOMPARE_DEFENSERATING = "Defense Rating";
@@ -119,7 +119,7 @@ function SC_Localization_enUS()
 	STATCOMPARE_BLOCKRATING = "Block Rating";
 	STATCOMPARE_SPELLPOWER = "Spell Power";
 	STATCOMPARE_SPELLPENETRATION = "Spell Penetration";
-	STATCOMPARE_RANGEDCRITRATING = "Ranged-Only Critical Strike Rating";
+	STATCOMPARE_RANGEDCRITRATING = "Ranged Critical Rating";
 	
 	STATCOMPARE_DMG		= "Spell Damage";
 	STATCOMPARE_DMGUNDEAD	= "Damage against Undead";
