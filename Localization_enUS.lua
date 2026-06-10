@@ -106,6 +106,21 @@ function SC_Localization_enUS()
 	STATCOMPARE_RANGEDATTACKPOWER = "Ranged AP";
 	STATCOMPARE_RANGEDCRIT	= "Crit. Shots";
 	STATCOMPARE_TOHIT	= "Chance to Hit";
+	-- WotLK 3.3.5 rating names
+	STATCOMPARE_HITRATING = "Hit Rating";
+	STATCOMPARE_CRITRATING = "Critical Strike Rating";
+	STATCOMPARE_HASTERATING = "Haste Rating";
+	STATCOMPARE_ARMORPENRATING = "Armor Penetration Rating";
+	STATCOMPARE_EXPERTISERATING = "Expertise Rating";
+	STATCOMPARE_RESILIENCERATING = "Resilience Rating";
+	STATCOMPARE_DEFENSERATING = "Defense Rating";
+	STATCOMPARE_DODGERATING = "Dodge Rating";
+	STATCOMPARE_PARRYRATING = "Parry Rating";
+	STATCOMPARE_BLOCKRATING = "Block Rating";
+	STATCOMPARE_SPELLPOWER = "Spell Power";
+	STATCOMPARE_SPELLPENETRATION = "Spell Penetration";
+	STATCOMPARE_RANGEDCRITRATING = "Ranged Critical Strike Rating";
+	
 	STATCOMPARE_DMG		= "Spell Damage";
 	STATCOMPARE_DMGUNDEAD	= "Damage against Undead";
 	STATCOMPARE_ARCANEDMG	= "Arcane Damage";
@@ -141,6 +156,21 @@ function SC_Localization_enUS()
 	STATCOMPARE_SET_PREFIX = "Set: ";
 
 	STATCOMPARE_EQUIP_PATTERNS = {
+		-- WotLK 3.3.5 rating-based tooltip lines
+		{ pattern = "Increases attack power by (%d+)%.", effect = {"ATTACKPOWER", "RANGEDATTACKPOWER"} },
+		{ pattern = "Increases ranged attack power by (%d+)%.", effect = "RANGEDATTACKPOWER" },
+		{ pattern = ".*hit rating by (%d+)%.", effect = "HITRATING" },
+		{ pattern = ".*critical strike rating by (%d+)%.", effect = "CRITRATING" },
+		{ pattern = ".*haste rating by (%d+)%.", effect = "HASTERATING" },
+		{ pattern = ".*armor penetration rating by (%d+)%.", effect = "ARMORPENRATING" },
+		{ pattern = ".*expertise rating by (%d+)%.", effect = "EXPERTISERATING" },
+		{ pattern = ".*resilience rating by (%d+)%.", effect = "RESILIENCERATING" },
+		{ pattern = ".*defense rating by (%d+)%.", effect = "DEFENSERATING" },
+		{ pattern = ".*dodge rating by (%d+)%.", effect = "DODGERATING" },
+		{ pattern = ".*parry rating by (%d+)%.", effect = "PARRYRATING" },
+		{ pattern = ".*block rating by (%d+)%.", effect = "BLOCKRATING" },
+		{ pattern = ".*spell power by (%d+)%.", effect = "SPELLPOWER" },
+		{ pattern = ".*spell penetration by (%d+)%.", effect = "SPELLPENETRATION" },
 		{ pattern = "+(%d+) ranged Attack Power%.", effect = "RANGEDATTACKPOWER" },
 		{ pattern = "+(%d+) Stamina%.", effect = "STA" },
 		{ pattern = "+(%d+) Agility%.", effect = "AGI" },
@@ -243,6 +273,23 @@ function SC_Localization_enUS()
 		["Hit"] 			= "TOHIT",
 		["Spell Hit"]			= "SPELLTOHIT",
 		["Ranged Attack Power"]		= "RANGEDATTACKPOWER",
+		-- WotLK 3.3.5 direct stat tokens
+		["Hit Rating"]			= "HITRATING",
+		["Critical Strike Rating"]	= "CRITRATING",
+		["Crit Rating"]			= "CRITRATING",
+		["Haste Rating"]		= "HASTERATING",
+		["Armor Penetration Rating"]	= "ARMORPENRATING",
+		["Expertise Rating"]		= "EXPERTISERATING",
+		["Resilience Rating"]		= "RESILIENCERATING",
+		["Defense Rating"]		= "DEFENSERATING",
+		["Dodge Rating"]		= "DODGERATING",
+		["Parry Rating"]		= "PARRYRATING",
+		["Block Rating"]		= "BLOCKRATING",
+		["Shield Block Rating"]		= "BLOCKRATING",
+		["Spell Power"]			= "SPELLPOWER",
+		["Spell Penetration"]		= "SPELLPENETRATION",
+		["Ranged Critical Strike"]	= "RANGEDCRITRATING",
+		["Ranged Critical Strike Rating"] = "RANGEDCRITRATING",
 		["health every 5 sec"]		= "HEALTHREG",
 		["Healing Spells"] 		= "HEAL",
 		["Increases Healing"] 		= "HEAL",
