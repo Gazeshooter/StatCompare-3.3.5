@@ -80,6 +80,18 @@ STATCOMPARE_EFFECTS = {
 	{ effect = "DODGE"            , name = STATCOMPARE_DODGE                      , format = "+%d%%"      , lformat = "%.2f%%"    , short = "MD"  , cat = "BON"   , opt="ShowDodge"      , show = 1 },
 	{ effect = "PARRY"            , name = STATCOMPARE_PARRY                      , format = "+%d%%"      , lformat = "%.2f%%"    , short = "MP"  , cat = "BON"   , opt="ShowParry"                 },
 	{ effect = "TOHIT"            , name = STATCOMPARE_TOHIT                      , format = "+%d%%"      , lformat = "%.2f%%"    , short = "MH"  , cat = "BON"   , opt="ShowToHit"                 },
+ -- WotLK 3.3.5 equipment ratings
+	{ effect = "HITRATING"         , name = STATCOMPARE_HITRATING                  , format = "+%d"        , lformat = "%d"        , short = "MH"  , cat = "BON"                                    },
+	{ effect = "CRITRATING"        , name = STATCOMPARE_CRITRATING                 , format = "+%d"        , lformat = "%d"        , short = "MC"  , cat = "BON"                                    },
+	{ effect = "HASTERATING"       , name = STATCOMPARE_HASTERATING                , format = "+%d"        , lformat = "%d"        , short = "MH"  , cat = "BON"                                    },
+	{ effect = "ARMORPENRATING"    , name = STATCOMPARE_ARMORPENRATING             , format = "+%d"        , lformat = "%d"        , short = "MA"  , cat = "BON"                                    },
+	{ effect = "EXPERTISERATING"   , name = STATCOMPARE_EXPERTISERATING            , format = "+%d"        , lformat = "%d"        , short = "MA"  , cat = "BON"                                    },
+	{ effect = "RESILIENCERATING"  , name = STATCOMPARE_RESILIENCERATING           , format = "+%d"        , lformat = "%d"        , short = "YDEF", cat = "BON"                                    },
+	{ effect = "DEFENSERATING"     , name = STATCOMPARE_DEFENSERATING              , format = "+%d"        , lformat = "%d"        , short = "YDEF", cat = "BON"                                    },
+	{ effect = "DODGERATING"       , name = STATCOMPARE_DODGERATING                , format = "+%d"        , lformat = "%d"        , short = "MD"  , cat = "BON"                                    },
+	{ effect = "PARRYRATING"       , name = STATCOMPARE_PARRYRATING                , format = "+%d"        , lformat = "%d"        , short = "MP"  , cat = "BON"                                    },
+	{ effect = "BLOCKRATING"       , name = STATCOMPARE_BLOCKRATING                , format = "+%d"        , lformat = "%d"        , short = "MB"  , cat = "BON"                                    },
+	{ effect = "RANGEDCRITRATING"  , name = STATCOMPARE_RANGEDCRITRATING           , format = "+%d"        , lformat = "%d"        , short = "RC"  , cat = "BON"                                    },
 	{ effect = "RANGEDATTACKPOWER", name = STATCOMPARE_RANGEDATTACKPOWER          , format = "+%d"        , lformat = "%d"        , short = "RA"  , cat = "BON"   , opt="ShowRAP"        , show = 1 },
 	{ effect = "RANGEDCRIT"       , name = STATCOMPARE_RANGEDCRIT                 , format = "+%d%%"      , lformat = "%.2f%%"    , short = "RC"  , cat = "BON"   , opt="ShowRCrit"      , show = 1 },
 --TODO	{ effect = "RANGEDHIT"        , name = STATCOMPARE_RANGEDHIT                  , format = "+%d%%"      , lformat = "%.2f%%"    , short = "RH"  , cat = "BON"   , opt="ShowRHit"       , show = 1 },
@@ -104,6 +116,8 @@ STATCOMPARE_EFFECTS = {
 	{ effect = "HOLYCRIT"         , name = STATCOMPARE_HOLYCRIT                   , format = "+%d%%"      , lformat = "%.2f%%"    , short = "CHC" , cat = "SBON"                                    },
 	{ effect = "SPELLCRIT"        , name = STATCOMPARE_SPELLCRIT                  , format = "+%d%%"      , lformat = "%.2f%%"    , short = "CSC" , cat = "SBON"                         , show = 1 },
 	{ effect = "SPELLTOHIT"       , name = STATCOMPARE_SPELLTOHIT                 , format = "+%d%%"      , lformat = "%.2f%%"    , short = "CSH" , cat = "SBON"                         , show = 1 },
+	{ effect = "SPELLPOWER"        , name = STATCOMPARE_SPELLPOWER                  , format = "+%d"                                , short = "CD"  , cat = "SBON"                                    },
+	{ effect = "SPELLPENETRATION"  , name = STATCOMPARE_SPELLPENETRATION            , format = "+%d"                                , short = "CSH" , cat = "SBON"                                    },
 
 	{ effect = "HEALTH"           , name = STATCOMPARE_HEALTH                     , format = "+%d"        , lformat = "%d"        , short = "LP"  , cat = "OBON"  , opt="ShowHealth"     , show = 1 },
 	{ effect = "HEALTHREG"        , name = STATCOMPARE_HEALTHREG                  , format = "%d HP/5s"                           , short = "LR"  , cat = "OBON"  , opt="ShowHealthRegen"           },
@@ -658,6 +672,20 @@ function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 		baseval["HEALTH"] = UnitHealthMax("player");
 		_, baseval["ARMOR"], _, _, _ = UnitArmor("player");
 		baseval["MANA"] = UnitManaMax("player");
+		-- WotLK 3.3.5 raw combat-rating totals for the local player.
+		-- Inspected targets cannot be queried through GetCombatRating(), so their
+		-- comparison panel continues to show scanned equipment totals only.
+		baseval["HITRATING"] = GetCombatRating(CR_HIT_RANGED or 7);
+		baseval["CRITRATING"] = GetCombatRating(CR_CRIT_RANGED or 10);
+		baseval["HASTERATING"] = GetCombatRating(CR_HASTE_RANGED or 19);
+		baseval["ARMORPENRATING"] = GetCombatRating(CR_ARMOR_PENETRATION or 25);
+		baseval["EXPERTISERATING"] = GetCombatRating(CR_EXPERTISE or 24);
+		baseval["RESILIENCERATING"] = GetCombatRating(CR_CRIT_TAKEN_MELEE or 15);
+		baseval["DEFENSERATING"] = GetCombatRating(CR_DEFENSE_SKILL or 2);
+		baseval["DODGERATING"] = GetCombatRating(CR_DODGE or 3);
+		baseval["PARRYRATING"] = GetCombatRating(CR_PARRY or 4);
+		baseval["BLOCKRATING"] = GetCombatRating(CR_BLOCK or 5);
+		baseval["RANGEDCRITRATING"] = GetCombatRating(CR_CRIT_RANGED or 10);
 	end
 	--DEFAULT_CHAT_FRAME:AddMessage("Entering GetTooltipText");
 	for i,e in pairs(STATCOMPARE_EFFECTS) do
