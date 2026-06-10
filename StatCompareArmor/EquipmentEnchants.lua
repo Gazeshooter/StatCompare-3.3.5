@@ -1746,6 +1746,24 @@ local function StatCompare_ShortenDisplayText_335(text)
 		text = string.gsub(text, replacement[1], replacement[2])
 	end
 
+	-- Compact common WotLK meta-gem wording. Keep the meaning intact while
+	-- avoiding long tooltip phrases that unnecessarily widen the gear panel.
+	text = string.gsub(text, "(%d+%%) Increased Critical Damage", "+%1 Crit Damage")
+	text = string.gsub(text, "(%d+%%) Increased Critical Healing Effect", "+%1 Crit Healing")
+	text = string.gsub(text, "(%d+%%) Increased Armor Value from Items", "+%1 Armor from Items")
+	text = string.gsub(text, "(%d+%%) Reduced Threat", "-%1 Threat")
+	text = string.gsub(text, "Reduce Spell Damage Taken by (%d+%%)", "-%1 Spell Damage Taken")
+	text = string.gsub(text, "Reduces Snare/Root Duration by (%d+%%)", "-%1 Snare/Root Duration")
+	text = string.gsub(text, "Silence Duration Reduced by (%d+%%)", "-%1 Silence Duration")
+	text = string.gsub(text, "Fear Duration Reduced by (%d+%%)", "-%1 Fear Duration")
+	text = string.gsub(text, "Stun Duration Reduced by (%d+%%)", "-%1 Stun Duration")
+	text = string.gsub(text, "%+%s*(%d+%%) Stun Duration Reduction", "-%1 Stun Duration")
+	text = string.gsub(text, "%+(%d+%%) Shield Block Value", "+%1 SBV")
+	text = string.gsub(text, "Minor Run Speed Increase", "Minor Run Speed")
+	text = string.gsub(text, "Chance to restore mana on spellcast", "Mana Restore Proc")
+	text = string.gsub(text, "Sometimes Heal on Your Crits", "Crit Heal Proc")
+	text = string.gsub(text, "Chance to Increase Melee/Ranged Attack Speed", "Attack Speed Proc")
+
 	-- Compact joined stat lists while leaving named effects untouched.
 	if string.find(text, "%+%d+") and string.find(text, " and ", 1, true) then
 		text = string.gsub(text, " and ", ", ")
@@ -2011,7 +2029,10 @@ function StatCompare_GetSocketedGemDisplayText(link)
 	end
 
 	local lines = {}
-	if table.getn(sockets) > 0 then
+	-- Do not clutter the panel with empty-socket-only rows. Show remaining
+	-- empty sockets only on partially socketed items where the information is
+	-- useful alongside the inserted gem effects.
+	if table.getn(sockets) > 0 and table.getn(gems) > 0 then
 		table.insert(lines, "      Empty Sockets: "..table.concat(sockets, ", ").."\n")
 	end
 	if table.getn(gems) > 0 then
