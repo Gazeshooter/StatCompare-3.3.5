@@ -840,6 +840,50 @@ local function StatCompare_SetExactRating_335(baseval, exactDisplay, key, rating
 	end
 end
 
+local StatCompare_TargetRatingBasePerPercent_335 = {
+	-- Base conversion values at level 60 and below. WotLK scales these upward
+	-- from level 61 onward. Armor penetration uses the final 3.3.5 conversion.
+	CRITRATING = 14,
+	HASTERATING = 10,
+	ARMORPENRATING = 4.268292683,
+	RANGEDCRITRATING = 14,
+}
+
+local function StatCompare_GetRatingLevelScale_335(level)
+	level = tonumber(level) or 80
+
+	if level > 70 then
+		return (82 / 52) * ((131 / 63) ^ ((level - 70) / 10))
+	elseif level > 60 then
+		return (82 / 52) ^ ((level - 60) / 10)
+	end
+
+	return 1
+end
+
+local function StatCompare_GetInspectedRatingPercent_335(effect, rating, unit)
+	local basePerPercent = StatCompare_TargetRatingBasePerPercent_335[effect]
+	local numericRating = tonumber(rating)
+
+	if not basePerPercent or not numericRating or numericRating == 0 then
+		return nil
+	end
+
+	local level = UnitLevel(unit or "target")
+	if not level or level <= 0 then
+		level = 80
+	end
+
+	local ratingPerPercent =
+		basePerPercent * StatCompare_GetRatingLevelScale_335(level)
+
+	if ratingPerPercent <= 0 then
+		return nil
+	end
+
+	return numericRating / ratingPerPercent
+end
+
 function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 	local retstr,cat,val,lval = "","","","","";
 	local i;
@@ -988,6 +1032,19 @@ function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 			else
 				val = bonuses[e.effect];
 			end;
+
+			if bSelfStat == 0 then
+				local inspectedPercent =
+					StatCompare_GetInspectedRatingPercent_335(
+						e.effect,
+						bonuses[e.effect],
+						"target"
+					)
+
+				if inspectedPercent then
+					val = val.." ("..format("%.2f%%", inspectedPercent)..")"
+				end
+			end
 
 			if (bSelfStat==1) then
 				if(baseval[e.effect]) then
