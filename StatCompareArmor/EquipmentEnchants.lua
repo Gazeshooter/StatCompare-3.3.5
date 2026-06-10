@@ -1912,16 +1912,30 @@ local function StatCompare_IsGemMetadataLine_335(text, gemName)
 	if string.find(lower, "^unique") then return true end
 	if string.find(lower, "^sell price") then return true end
 	if string.find(lower, "^socket") then return true end
+	if string.find(lower, "^binds when") then return true end
+	if string.find(lower, "^bind on") then return true end
 
-	-- Socket compatibility helper lines are metadata, not gem effects.
+	-- Socket and slot compatibility helper lines are metadata, not gem effects.
 	-- Handle quoted, capitalized and alternate wording variants such as:
 	--   "Matches a Red Socket."
 	--   "Matches any socket."
 	--   "Fits in a Meta Socket."
 	--   "Only fits in a Cogwheel Socket."
-	if string.find(lower, "socket", 1, true) then
-		if string.find(lower, "match", 1, true) then return true end
-		if string.find(lower, "fit", 1, true) then return true end
+	--   "Only fits in a meta gem slot."
+	local hasCompatibilityWord =
+		string.find(lower, "match", 1, true)
+		or string.find(lower, "fit", 1, true)
+		or string.find(lower, "only works", 1, true)
+		or string.find(lower, "can only be used", 1, true)
+
+	local hasSocketOrSlotWord =
+		string.find(lower, "socket", 1, true)
+		or string.find(lower, "slot", 1, true)
+		or string.find(lower, "meta gem", 1, true)
+		or string.find(lower, "cogwheel", 1, true)
+
+	if hasCompatibilityWord and hasSocketOrSlotWord then
+		return true
 	end
 
 	return false
