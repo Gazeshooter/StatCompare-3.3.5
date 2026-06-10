@@ -119,7 +119,7 @@ function SC_Localization_enUS()
 	STATCOMPARE_BLOCKRATING = "Block Rating";
 	STATCOMPARE_SPELLPOWER = "Spell Power";
 	STATCOMPARE_SPELLPENETRATION = "Spell Penetration";
-	STATCOMPARE_RANGEDCRITRATING = "Ranged Critical Strike Rating";
+	STATCOMPARE_RANGEDCRITRATING = "Ranged-Only Critical Strike Rating";
 	
 	STATCOMPARE_DMG		= "Spell Damage";
 	STATCOMPARE_DMGUNDEAD	= "Damage against Undead";
