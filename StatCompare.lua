@@ -685,7 +685,7 @@ function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 		baseval["DODGERATING"] = GetCombatRating(CR_DODGE or 3);
 		baseval["PARRYRATING"] = GetCombatRating(CR_PARRY or 4);
 		baseval["BLOCKRATING"] = GetCombatRating(CR_BLOCK or 5);
-		baseval["RANGEDCRITRATING"] = GetCombatRating(CR_CRIT_RANGED or 10);
+
 	end
 	--DEFAULT_CHAT_FRAME:AddMessage("Entering GetTooltipText");
 	for i,e in pairs(STATCOMPARE_EFFECTS) do
