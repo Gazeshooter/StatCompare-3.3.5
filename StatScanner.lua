@@ -87,6 +87,9 @@ local function _ScanForDiscreteGearBonuses(line)
 	local value, token, pos, tmpStr, found;
 	line = string.gsub( line, "^%s+", "" );
 	-- split line at "/" for enchants with multiple effects
+	-- WotLK enchants and gems can contain multiple signed stats joined by "and".
+	-- Convert those separators into the slash format already handled below.
+	line = string.gsub(line, "%s+and%s+(%+%d+)", "/%1");
 	found = false;
 
 	while(string.len(line) > 0) do
