@@ -1220,14 +1220,60 @@ function StatCompare_UpdateFrameContent(frameName, textbody, unit, tiptitle)
 	StatBuffs_UpdateBuffs(frameName, unit)
 end
 
-local function StatCompare_GetRenderedStringWidth(fontString)
-	if fontString and fontString.GetStringWidth then
-		return fontString:GetStringWidth() or 0
+local StatCompare_MeasureBodyText_335
+local StatCompare_MeasureTitleText_335
+
+local function StatCompare_GetMeasureFontString_335(isTitle)
+	if isTitle then
+		if not StatCompare_MeasureTitleText_335 then
+			StatCompare_MeasureTitleText_335 =
+				UIParent:CreateFontString(nil, "OVERLAY", "GameTooltipHeaderText")
+			StatCompare_MeasureTitleText_335:Hide()
+		end
+		return StatCompare_MeasureTitleText_335
 	end
-	return fontString and fontString:GetWidth() or 0
+
+	if not StatCompare_MeasureBodyText_335 then
+		StatCompare_MeasureBodyText_335 =
+			UIParent:CreateFontString(nil, "OVERLAY", "GameTooltipText")
+		StatCompare_MeasureBodyText_335:Hide()
+	end
+	return StatCompare_MeasureBodyText_335
 end
 
-local function StatCompare_GetRenderedStringHeight(fontString)
+local function StatCompare_GetVisibleText_335(value)
+	local visible = value or ""
+
+	-- Keep only the visible label from WoW hyperlinks:
+	-- |Hitem:...|h[Visible Item Name]|h  ->  [Visible Item Name]
+	visible = string.gsub(visible, "|H.-|h(.-)|h", "%1")
+
+	-- Remove invisible formatting controls before measuring width.
+	visible = string.gsub(visible, "|c%x%x%x%x%x%x%x%x", "")
+	visible = string.gsub(visible, "|r", "")
+	visible = string.gsub(visible, "|T.-|t", "  ")
+
+	return visible
+end
+
+local function StatCompare_GetVisibleWidth_335(value, isTitle)
+	local measure = StatCompare_GetMeasureFontString_335(isTitle)
+	local visible = StatCompare_GetVisibleText_335(value)
+	local widest = 0
+
+	for line in string.gmatch(visible.."\n", "(.-)\n") do
+		measure:SetText(line)
+		local width = measure:GetStringWidth() or 0
+		if width > widest then
+			widest = width
+		end
+	end
+
+	measure:SetText("")
+	return widest
+end
+
+local function StatCompare_GetRenderedStringHeight_335(fontString)
 	if fontString and fontString.GetStringHeight then
 		return fontString:GetStringHeight() or 0
 	end
@@ -1244,23 +1290,22 @@ function StatCompare_UpdateFrameText(frameName, textbody, titletext)
 		title:SetText(titletext)
 	end
 
-	-- The text FontString is anchored 10 px from the left and 20 px from the
-	-- top. Measure the rendered strings rather than the previous widget width,
-	-- so the frame can both grow and shrink exactly with its current content.
+	-- The body text is anchored 10 px from the left and 20 px from the top.
+	-- Measure a formatting-stripped copy line by line so hidden item-link
+	-- payloads do not create large blank areas to the right of the panel.
 	local leftInset = 10
 	local rightInset = 10
 	local topInset = 20
 	local bottomInset = 10
 
-	-- Reserve enough room for the close button and the three small header
-	-- buttons without forcing a wide empty panel.
+	-- Reserve only the room needed for the close button and header buttons.
 	local titleBarButtonsWidth = 86
 	local minimumFrameWidth = 250
 	local minimumFrameHeight = 50
 
-	local textWidth = math.ceil(StatCompare_GetRenderedStringWidth(text))
-	local titleWidth = math.ceil(StatCompare_GetRenderedStringWidth(title))
-	local textHeight = math.ceil(StatCompare_GetRenderedStringHeight(text))
+	local textWidth = math.ceil(StatCompare_GetVisibleWidth_335(textbody or "", false))
+	local titleWidth = math.ceil(StatCompare_GetVisibleWidth_335(title:GetText() or "", true))
+	local textHeight = math.ceil(StatCompare_GetRenderedStringHeight_335(text))
 
 	local frameWidth = math.max(
 		minimumFrameWidth,
