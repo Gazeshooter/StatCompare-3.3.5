@@ -47,20 +47,14 @@ STATCOMPARE_EFFECTS = {
 	{ effect = "INT"              , name = STATCOMPARE_INT                        , format = "+%d"        , lformat = "%d"        , short = "XINT", cat = "ATT"   , opt="ShowINT"        , show = 1 },
 	{ effect = "SPI"              , name = STATCOMPARE_SPI                        , format = "+%d"        , lformat = "%d"        , short = "XSPI", cat = "ATT"   , opt="ShowSPI"        , show = 1 },
 
-	-- WotLK 3.3.5 defensive values
-	{ effect = "ARMOR"             , name = STATCOMPARE_ARMOR                      , format = "+%d"         , lformat = "%d"        , short = "M"     , cat = "DEF"   , opt="ShowArmor"      , show = 1 },
-	{ effect = "ENARMOR"           , name = STATCOMPARE_ENARMOR                    , format = "+%d"         , lformat = "%d"        , short = "M"     , cat = "DEF"   , opt="ShowEnArmor"    , show = 0 },
-	{ effect = "DAMAGEREDUCE"      , name = STATCOMPARE_DAMAGEREDUCE               , format = "+%d%%"       , lformat = "%.2f%%"    , short = "M"     , cat = "DEF"   , opt="ShowDR"         , show = 1 },
-	{ effect = "DEFENSE"           , name = STATCOMPARE_DEFENSE                    , format = "+%d"         , lformat = "%d"        , short = "M"     , cat = "DEF"   , opt="ShowDefense" },
-	{ effect = "DEFENSERATING"     , name = STATCOMPARE_DEFENSERATING              , format = "+%d"         , lformat = "%d"        , short = "M"     , cat = "DEF" },
-	{ effect = "DODGE"             , name = STATCOMPARE_DODGE                      , format = "+%d%%"       , lformat = "%.2f%%"    , short = "M"     , cat = "DEF"   , opt="ShowDodge"      , show = 1 },
-	{ effect = "DODGERATING"       , name = STATCOMPARE_DODGERATING                , format = "+%d"         , lformat = "%d"        , short = "M"     , cat = "DEF" },
-	{ effect = "PARRY"             , name = STATCOMPARE_PARRY                      , format = "+%d%%"       , lformat = "%.2f%%"    , short = "M"     , cat = "DEF"   , opt="ShowParry" },
-	{ effect = "PARRYRATING"       , name = STATCOMPARE_PARRYRATING                , format = "+%d"         , lformat = "%d"        , short = "M"     , cat = "DEF" },
-	{ effect = "TOBLOCK"           , name = STATCOMPARE_TOBLOCK                    , format = "+%d%%"       , lformat = "%.2f%%"    , short = "M"     , cat = "DEF"   , opt="ShowToBlock" },
-	{ effect = "BLOCKRATING"       , name = STATCOMPARE_BLOCKRATING                , format = "+%d"         , lformat = "%d"        , short = "M"     , cat = "DEF" },
-	{ effect = "BLOCK"             , name = STATCOMPARE_BLOCK                      , format = "+%d"         , lformat = "%d"        , short = "M"     , cat = "DEF"   , opt="ShowBlock"      , show = 1 },
-	{ effect = "RESILIENCERATING"  , name = STATCOMPARE_RESILIENCERATING           , format = "+%d"         , lformat = "%d"        , short = "M"     , cat = "DEF" },
+	-- WotLK 3.3.5 defensive summaries.
+	-- Each visible row combines its raw rating with the useful derived values.
+	{ effect = "ARMOR"             , name = STATCOMPARE_ARMOR                      , format = "+%d"         , short = "M"     , cat = "DEF"   , opt="ShowArmor"   , show = 1 },
+	{ effect = "DEFENSERATING"     , name = STATCOMPARE_DEFENSERATING              , format = "+%d"         , short = "M"     , cat = "DEF" },
+	{ effect = "DODGERATING"       , name = STATCOMPARE_DODGERATING                , format = "+%d"         , short = "M"     , cat = "DEF" },
+	{ effect = "PARRYRATING"       , name = STATCOMPARE_PARRYRATING                , format = "+%d"         , short = "M"     , cat = "DEF" },
+	{ effect = "BLOCKRATING"       , name = STATCOMPARE_BLOCKRATING                , format = "+%d"         , short = "M"     , cat = "DEF" },
+	{ effect = "RESILIENCERATING"  , name = STATCOMPARE_RESILIENCERATING           , format = "+%d"         , short = "M"     , cat = "DEF" },
 
 	{ effect = "VAMPIRISM"        , name = STATCOMPARE_VAMPIRISM                  , format = "+%d%%"      , lformat = "%.2f%%"    , short = ""    , cat = "MISC"  , opt="ShowVampirism"  , show = 1 },
 	{ effect = "HASTE"            , name = STATCOMPARE_SPEED                      , format = "+%d%%"      , lformat = "%.2f%%"    , short = ""    , cat = "MISC"  , opt="ShowHaste"      , show = 1 },
@@ -849,6 +843,12 @@ local StatCompare_TargetRatingBasePerPercent_335 = {
 	HASTERATING = 10,
 	ARMORPENRATING = 4.268292683,
 	RANGEDCRITRATING = 14,
+
+	-- WotLK defensive rating conversions.
+	DODGERATING = 13.8,
+	PARRYRATING = 13.8,
+	BLOCKRATING = 5,
+	RESILIENCERATING = 25,
 }
 
 local function StatCompare_GetRatingLevelScale_335(level)
@@ -884,6 +884,264 @@ local function StatCompare_GetInspectedRatingPercent_335(effect, rating, unit)
 	end
 
 	return numericRating / ratingPerPercent
+end
+
+local function StatCompare_FormatCompactNumber_335(value)
+	value = tonumber(value) or 0
+
+	if math.abs(value - math.floor(value + 0.5)) < 0.005 then
+		return tostring(math.floor(value + 0.5))
+	end
+
+	return format("%.2f", value)
+end
+
+local function StatCompare_GetArmorReductionPercent_335(armor, level)
+	armor = tonumber(armor) or 0
+	level = tonumber(level) or 80
+
+	if PaperDollFrame_GetArmorReduction then
+		return PaperDollFrame_GetArmorReduction(armor, level) or 0
+	end
+
+	return 0
+end
+
+local function StatCompare_GetPetArmorInheritance_335(unit)
+	local _, classToken = UnitClass(unit or "player")
+
+	if classToken == "HUNTER" then
+		return 35
+	elseif classToken == "WARLOCK" then
+		return 35
+	end
+
+	return nil
+end
+
+local function StatCompare_GetArmorDisplay_335(unit, bonuses, isSelf)
+	local _, effectiveArmor = UnitArmor(unit)
+	local armor = tonumber(effectiveArmor)
+
+	if not armor or armor <= 0 then
+		armor = tonumber(bonuses["ARMOR"]) or 0
+	end
+
+	if armor <= 0 then
+		return nil
+	end
+
+	local level = UnitLevel(unit)
+	if not level or level <= 0 then
+		level = 80
+	end
+
+	local parts = {
+		format("%.2f%% DR", StatCompare_GetArmorReductionPercent_335(armor, level))
+	}
+
+	local petArmorPercent = StatCompare_GetPetArmorInheritance_335(unit)
+	if petArmorPercent then
+		table.insert(parts, "+"..petArmorPercent.."% Pet Armor")
+	end
+
+	local prefix = isSelf and "" or "+"
+	return prefix..StatCompare_FormatCompactNumber_335(armor)
+		.." ("..table.concat(parts, ", ")..")"
+end
+
+local function StatCompare_GetInspectedDefenseSkillBonus_335(rating, unit)
+	rating = tonumber(rating) or 0
+
+	if rating == 0 then
+		return 0
+	end
+
+	local level = UnitLevel(unit or "target")
+	if not level or level <= 0 then
+		level = 80
+	end
+
+	local ratingPerSkill = 1.5 * StatCompare_GetRatingLevelScale_335(level)
+	if ratingPerSkill <= 0 then
+		return 0
+	end
+
+	return rating / ratingPerSkill
+end
+
+local function StatCompare_GetDefenseDisplay_335(unit, bonuses, isSelf)
+	local rating
+	local skillBonus
+	local effectPercent
+
+	if isSelf then
+		rating = GetCombatRating(CR_DEFENSE_SKILL or 2) or 0
+		skillBonus = GetCombatRatingBonus(CR_DEFENSE_SKILL or 2) or 0
+
+		local baseDefense, modifier = UnitDefense("player")
+		local totalDefense = (baseDefense or 0) + (modifier or 0)
+		effectPercent = math.max(
+			(totalDefense - ((UnitLevel("player") or 80) * 5)) * 0.04,
+			0
+		)
+	else
+		rating = tonumber(bonuses["DEFENSERATING"]) or 0
+		skillBonus = StatCompare_GetInspectedDefenseSkillBonus_335(rating, unit)
+		effectPercent = math.max(skillBonus * 0.04, 0)
+	end
+
+	if rating == 0 and skillBonus == 0 and effectPercent == 0 then
+		return nil
+	end
+
+	local prefix = isSelf and "" or "+"
+	return prefix..StatCompare_FormatCompactNumber_335(rating)
+		.." (+"..StatCompare_FormatCompactNumber_335(skillBonus).." Skill"
+		..", +"..format("%.2f%%", effectPercent).." Dodge/Parry/Block"
+		..", -"..format("%.2f%%", effectPercent).." Hit/Crit)"
+end
+
+local function StatCompare_GetAvoidanceDisplay_335(
+	unit,
+	bonuses,
+	isSelf,
+	effect,
+	ratingIndex,
+	chanceFunction
+)
+	local rating
+	local chance
+
+	if isSelf then
+		rating = GetCombatRating(ratingIndex) or 0
+		chance = chanceFunction and chanceFunction() or 0
+	else
+		rating = tonumber(bonuses[effect]) or 0
+		chance = StatCompare_GetInspectedRatingPercent_335(effect, rating, unit) or 0
+	end
+
+	if rating == 0 and chance == 0 then
+		return nil
+	end
+
+	local prefix = isSelf and "" or "+"
+	return prefix..StatCompare_FormatCompactNumber_335(rating)
+		.." ("..format("%.2f%%", chance)..")"
+end
+
+local function StatCompare_GetBlockDisplay_335(unit, bonuses, isSelf)
+	local rating
+	local chance
+	local blockValue
+
+	if isSelf then
+		rating = GetCombatRating(CR_BLOCK or 5) or 0
+		chance = GetBlockChance and GetBlockChance() or 0
+		blockValue = GetShieldBlock and GetShieldBlock() or 0
+	else
+		rating = tonumber(bonuses["BLOCKRATING"]) or 0
+		chance = StatCompare_GetInspectedRatingPercent_335(
+			"BLOCKRATING",
+			rating,
+			unit
+		) or 0
+		blockValue = tonumber(bonuses["BLOCK"]) or 0
+	end
+
+	if rating == 0 and chance == 0 and blockValue == 0 then
+		return nil
+	end
+
+	local prefix = isSelf and "" or "+"
+	return prefix..StatCompare_FormatCompactNumber_335(rating)
+		.." ("..format("%.2f%%", chance)
+		..", "..StatCompare_FormatCompactNumber_335(blockValue).." Dmg)"
+end
+
+local function StatCompare_GetResilienceDisplay_335(unit, bonuses, isSelf)
+	local rating
+	local critChanceReduction
+	local critDamageReduction
+	local damageReduction
+
+	if isSelf then
+		local melee = GetCombatRating(CR_CRIT_TAKEN_MELEE or 15) or 0
+		local ranged = GetCombatRating(CR_CRIT_TAKEN_RANGED or 16) or 0
+		local spell = GetCombatRating(CR_CRIT_TAKEN_SPELL or 17) or 0
+
+		rating = math.min(melee, ranged, spell)
+
+		local ratingIndex = CR_CRIT_TAKEN_MELEE or 15
+		if ranged == rating then
+			ratingIndex = CR_CRIT_TAKEN_RANGED or 16
+		elseif spell == rating then
+			ratingIndex = CR_CRIT_TAKEN_SPELL or 17
+		end
+
+		critChanceReduction = GetCombatRatingBonus(ratingIndex) or 0
+
+		local maxBonus = critChanceReduction * 2.2
+		if GetMaxCombatRatingBonus then
+			maxBonus = GetMaxCombatRatingBonus(ratingIndex) or maxBonus
+		end
+
+		critDamageReduction = math.min(critChanceReduction * 2.2, maxBonus)
+		damageReduction = critChanceReduction * 2
+	else
+		rating = tonumber(bonuses["RESILIENCERATING"]) or 0
+		critChanceReduction = StatCompare_GetInspectedRatingPercent_335(
+			"RESILIENCERATING",
+			rating,
+			unit
+		) or 0
+		critDamageReduction = critChanceReduction * 2.2
+		damageReduction = critChanceReduction * 2
+	end
+
+	if rating == 0 then
+		return nil
+	end
+
+	local prefix = isSelf and "" or "+"
+	return prefix..StatCompare_FormatCompactNumber_335(rating)
+		.." (-"..format("%.2f%%", critChanceReduction).." Crit"
+		..", -"..format("%.2f%%", critDamageReduction).." Crit Dmg"
+		..", -"..format("%.2f%%", damageReduction).." Dmg)"
+end
+
+local function StatCompare_BuildDefenseDisplays_335(exactDisplay, bonuses, unit, isSelf)
+	exactDisplay["ARMOR"] =
+		StatCompare_GetArmorDisplay_335(unit, bonuses, isSelf)
+
+	exactDisplay["DEFENSERATING"] =
+		StatCompare_GetDefenseDisplay_335(unit, bonuses, isSelf)
+
+	exactDisplay["DODGERATING"] =
+		StatCompare_GetAvoidanceDisplay_335(
+			unit,
+			bonuses,
+			isSelf,
+			"DODGERATING",
+			CR_DODGE or 3,
+			GetDodgeChance
+		)
+
+	exactDisplay["PARRYRATING"] =
+		StatCompare_GetAvoidanceDisplay_335(
+			unit,
+			bonuses,
+			isSelf,
+			"PARRYRATING",
+			CR_PARRY or 4,
+			GetParryChance
+		)
+
+	exactDisplay["BLOCKRATING"] =
+		StatCompare_GetBlockDisplay_335(unit, bonuses, isSelf)
+
+	exactDisplay["RESILIENCERATING"] =
+		StatCompare_GetResilienceDisplay_335(unit, bonuses, isSelf)
 end
 
 function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
@@ -1012,6 +1270,14 @@ function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 				format("+%d (%.2f%%)", rangedOnlyCritRating, rangedOnlyCritBonus)
 		end
 	end
+
+	StatCompare_BuildDefenseDisplays_335(
+		exactDisplay,
+		bonuses,
+		bSelfStat == 1 and "player" or "target",
+		bSelfStat == 1
+	)
+
 	--DEFAULT_CHAT_FRAME:AddMessage("Entering GetTooltipText");
 	for i,e in pairs(STATCOMPARE_EFFECTS) do
 		val = nil; lval = nil; continue = true
@@ -1019,9 +1285,10 @@ function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 			continue = false
 		end
 
-		if continue and bSelfStat == 1 and exactDisplay[e.effect] then
-			-- For the local player, use Blizzard's live API breakdown rather than
-			-- presenting a tooltip-derived gear scan as though it were authoritative.
+		if continue and exactDisplay[e.effect] then
+			-- Use compact composite defense rows for both the local player and
+			-- inspected targets. Local values come from Blizzard APIs; inspected
+			-- values remain gear-derived where the client cannot expose totals.
 			val = exactDisplay[e.effect]
 		elseif continue and BCSLib and BCSLib.StatHasCallback and BCSLib:StatHasCallback(e.effect) then
 			local bcs_stat = BCSLib:GetStat(e.effect, (bSelfStat == 1 and "player" or "target"))
