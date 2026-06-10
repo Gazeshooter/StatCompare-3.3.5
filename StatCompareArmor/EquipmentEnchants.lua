@@ -1808,6 +1808,97 @@ local function StatCompare_IsSocketLine_335(text)
 	return string.find(text, " Socket$") ~= nil and string.find(text, "^Socket Bonus:") == nil
 end
 
+StatCompare_GemEffectCache = StatCompare_GemEffectCache or {}
+
+local function StatCompare_ReadTooltipRows_335(link)
+	local rows = {}
+	if not link or link == "" then return rows end
+
+	local tooltip = StatCompare_GetLiveTooltip_335()
+	tooltip:ClearLines()
+	tooltip:SetHyperlink(link)
+
+	local function addRow(fontString)
+		if not fontString then return end
+
+		local text = StatCompare_NormalizeTooltipText_335(fontString:GetText())
+		if not text then return end
+
+		local r, g, b = fontString:GetTextColor()
+		table.insert(rows, {
+			text = text,
+			r = r or 0,
+			g = g or 0,
+			b = b or 0
+		})
+	end
+
+	for i = 1, tooltip:NumLines() do
+		addRow(getglobal(tooltip:GetName().."TextLeft"..i))
+		addRow(getglobal(tooltip:GetName().."TextRight"..i))
+	end
+
+	tooltip:Hide()
+	return rows
+end
+
+local function StatCompare_IsActiveSocketBonus_335(row)
+	if not row then return false end
+
+	-- In the WotLK tooltip, an activated socket bonus is green. An inactive
+	-- socket bonus is greyed out. Suppress ambiguous rows rather than showing
+	-- an inactive bonus as though it applied.
+	return row.g > 0.55
+		and row.g > row.r + 0.10
+		and row.g > row.b + 0.10
+end
+
+local function StatCompare_IsGemMetadataLine_335(text, gemName)
+	if not text then return true end
+	if gemName and text == gemName then return true end
+	if text == "Gem" then return true end
+	if string.find(text, "^Item Level") then return true end
+	if string.find(text, "^Requires") then return true end
+	if string.find(text, "^Matches a ") then return true end
+	if string.find(text, "^Unique") then return true end
+	if string.find(text, "^Sell Price") then return true end
+	if string.find(text, "^Socket") then return true end
+	return false
+end
+
+local function StatCompare_GetGemEffectText_335(gemName, gemLink)
+	local cacheKey = gemLink or gemName
+	if not cacheKey then return nil end
+
+	if StatCompare_GemEffectCache[cacheKey] ~= nil then
+		return StatCompare_GemEffectCache[cacheKey]
+	end
+
+	local effects = {}
+	if gemLink then
+		for _, text in ipairs(StatCompare_ReadTooltipLines_335(gemLink)) do
+			if not StatCompare_IsGemMetadataLine_335(text, gemName) then
+				table.insert(effects, text)
+			end
+		end
+	end
+
+	local result
+	if table.getn(effects) > 0 then
+		result = table.concat(effects, " / ")
+	else
+		-- Fallback for unusual or server-specific gems whose effect tooltip is
+		-- unavailable. Standard WotLK gems resolve to their stat text above.
+		result = gemName
+	end
+
+	if result then
+		StatCompare_GemEffectCache[cacheKey] = result
+	end
+
+	return result
+end
+
 function StatCompare_GetSocketedGemDisplayText(link)
 	if not link then return "" end
 
@@ -1818,43 +1909,44 @@ function StatCompare_GetSocketedGemDisplayText(link)
 	local sockets = {}
 	local socketSeen = {}
 	local gems = {}
-	local socketBonus
-	local tooltipLines = StatCompare_ReadTooltipLines_335(link)
+	local activeSocketBonus
+	local tooltipRows = StatCompare_ReadTooltipRows_335(link)
 
-	for _, text in ipairs(tooltipLines) do
+	for _, row in ipairs(tooltipRows) do
+		local text = row.text
 		if StatCompare_IsSocketLine_335(text) and not socketSeen[text] then
 			socketSeen[text] = true
 			table.insert(sockets, text)
-		elseif string.find(text, "^Socket Bonus:") then
-			socketBonus = text
+		elseif string.find(text, "^Socket Bonus:")
+			and StatCompare_IsActiveSocketBonus_335(row) then
+			activeSocketBonus = text
 		end
 	end
 
 	if GetItemGem then
 		for socketIndex = 1, 4 do
 			local gemName, gemLink = GetItemGem(link, socketIndex)
-			if gemLink then
-				table.insert(gems, gemLink)
-			elseif gemName then
-				table.insert(gems, gemName)
+			local gemEffect = StatCompare_GetGemEffectText_335(gemName, gemLink)
+
+			if gemEffect then
+				table.insert(gems, gemEffect)
 			end
 		end
 	end
 
-	local details = {}
+	local lines = {}
 	if table.getn(sockets) > 0 then
-		table.insert(details, "Sockets: "..table.concat(sockets, ", "))
+		table.insert(lines, "      Empty Sockets: "..table.concat(sockets, ", ").."\n")
 	end
 	if table.getn(gems) > 0 then
-		table.insert(details, "Gems: "..table.concat(gems, ", "))
+		table.insert(lines, "      Gems: "..table.concat(gems, ", ").."\n")
 	end
-	if socketBonus then
-		table.insert(details, socketBonus)
+	if activeSocketBonus then
+		table.insert(lines, "      "..activeSocketBonus.."\n")
 	end
 
-	local result = ""
-	if table.getn(details) > 0 then
-		result = "      "..table.concat(details, " | ").."\n"
+	local result = table.concat(lines, "")
+	if result ~= "" then
 		-- Only cache successful reads. Inspected-player item data can arrive
 		-- after the first scan; caching an empty result would hide later data.
 		StatCompare_GemDisplayCache[link] = result
