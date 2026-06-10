@@ -341,11 +341,13 @@ function StatCompare_Register(register)
         frame:RegisterEvent("UNIT_INVENTORY_CHANGED")
         frame:RegisterEvent("PLAYER_LOGOUT")
         frame:RegisterEvent("UNIT_NAME_UPDATE")
+        frame:RegisterEvent("INSPECT_TALENT_READY")
     else
         frame:UnregisterEvent("PLAYER_ENTERING_WORLD")
         frame:UnregisterEvent("UNIT_INVENTORY_CHANGED")
         frame:UnregisterEvent("PLAYER_LOGOUT")
         frame:UnregisterEvent("UNIT_NAME_UPDATE")
+        frame:UnregisterEvent("INSPECT_TALENT_READY")
     end
 end
 
@@ -415,6 +417,95 @@ function STATCOMPARE_SlashCmdHandler(msg)
 end
 
 local StatCompare_isLoaded=0
+
+local StatCompare_InspectRefreshFrame_335
+local StatCompare_InspectRefreshSchedule_335 = {}
+
+local function StatCompare_CancelInspectRefresh_335()
+	StatCompare_InspectRefreshSchedule_335 = {}
+
+	if StatCompare_InspectRefreshFrame_335 then
+		StatCompare_InspectRefreshFrame_335:Hide()
+	end
+end
+
+local function StatCompare_RefreshInspectFrames_335()
+	if not InspectFrame
+		or not InspectFrame:IsVisible()
+		or not StatCompareTargetFrame
+		or not StatCompareTargetFrame:IsVisible() then
+		return
+	end
+
+	local targetName = UnitName("target") or ""
+	local tiptext = StatCompare_UpdateAndGetTooltipText(StatScanner_bonuses, 0)
+
+	StatCompare_UpdateFrameContent(
+		StatCompareTargetFrame:GetName(),
+		tiptext,
+		"target",
+		targetName
+	)
+
+	if StatCompareSelfFrame and StatCompareSelfFrame:IsVisible() then
+		tiptext = StatCompare_UpdateAndGetTooltipText(StatScanner_bonuses, 1)
+
+		StatCompare_UpdateFrameContent(
+			StatCompareSelfFrame:GetName(),
+			tiptext,
+			"player",
+			UnitName("player")
+		)
+	end
+end
+
+local function StatCompare_GetInspectRefreshFrame_335()
+	if StatCompare_InspectRefreshFrame_335 then
+		return StatCompare_InspectRefreshFrame_335
+	end
+
+	local frame = CreateFrame("Frame")
+	frame:Hide()
+
+	frame:SetScript("OnUpdate", function(self)
+		local now = GetTime()
+		local refreshed = false
+
+		for index = table.getn(StatCompare_InspectRefreshSchedule_335), 1, -1 do
+			if now >= StatCompare_InspectRefreshSchedule_335[index] then
+				table.remove(StatCompare_InspectRefreshSchedule_335, index)
+				refreshed = true
+			end
+		end
+
+		if refreshed then
+			StatCompare_RefreshInspectFrames_335()
+		end
+
+		if table.getn(StatCompare_InspectRefreshSchedule_335) == 0 then
+			self:Hide()
+		end
+	end)
+
+	StatCompare_InspectRefreshFrame_335 = frame
+	return frame
+end
+
+local function StatCompare_ScheduleInspectRefresh_335()
+	local now = GetTime()
+
+	-- Item links, gems and inspected talents do not always arrive in the same
+	-- update. Rescan shortly after the initial inspect request and again after
+	-- a slightly longer delay for slower server responses.
+	StatCompare_InspectRefreshSchedule_335 = {
+		now + 0.10,
+		now + 0.35,
+		now + 0.80,
+	}
+
+	StatCompare_GetInspectRefreshFrame_335():Show()
+end
+
 function StatCompare_OnEvent(self, event, ...)
     local arg1 = ...
 
@@ -459,6 +550,12 @@ function StatCompare_OnEvent(self, event, ...)
 		end
 		StatCompare_isLoaded=1;
 	end
+	if event == "INSPECT_TALENT_READY"
+		and StatCompare_enable
+		and StatCompare_isLoaded == 1 then
+		StatCompare_ScheduleInspectRefresh_335()
+	end
+
 	if ( (event == "UNIT_INVENTORY_CHANGED") and StatCompare_enable and StatCompare_isLoaded==1) then
 		if ((arg1 == "player") and StatCompareSelfFrame:IsVisible()) then
 			-- Refresh the visible player panel in place. Calling SCShowFrame() here
@@ -684,6 +781,8 @@ function SCInspectFrame_Show(unit)
 
 		tiptext = StatCompare_UpdateAndGetTooltipText(StatScanner_bonuses,1);
 		SCShowFrame(StatCompareSelfFrame,StatCompareTargetFrame,UnitName("player"),tiptext,0,0);
+
+		StatCompare_ScheduleInspectRefresh_335();
 	end
 end
 
@@ -1018,8 +1117,9 @@ function StatCompare_GetTooltipText(bonuses,bSelfStat)
 		retstr= retstr..StatCompare_GetGearsetTooltipText(bonuses,bSelfStat)
 	end
 
-	if StatCompare_GetDisplayGroupSetting(bSelfStat, "TalentSpec") and bSelfStat == 1 and StatCompare_GetTalentSpecToolTipText then
-		retstr= retstr..StatCompare_GetTalentSpecToolTipText()
+	if StatCompare_GetDisplayGroupSetting(bSelfStat, "TalentSpec")
+		and StatCompare_GetTalentSpecToolTipText then
+		retstr = retstr..StatCompare_GetTalentSpecToolTipText(bSelfStat == 0)
 	end
 
 	if StatCompare_GetDisplayGroupSetting(bSelfStat, "SpellPowerStats") and StatCompare_GetSpellsTooltipText then
@@ -1691,6 +1791,8 @@ function StatCompare_OnLoad()
 
     if InspectFrame then
         InspectFrame:HookScript("OnHide", function()
+            StatCompare_CancelInspectRefresh_335()
+
             if StatCompareTargetFrame then
                 SCHideFrame(StatCompareTargetFrame)
             end
