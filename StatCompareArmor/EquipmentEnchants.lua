@@ -1546,7 +1546,7 @@ StatCompare_EnchantsById = {
 	[2718] = { ["enchantId"] = "2718", ["effect"] = "Lesser Rune of Warding" },
 	[2719] = { ["enchantId"] = "2719", ["effect"] = "Lesser Ward of Shielding" },
 	[2720] = { ["enchantId"] = "2720", ["effect"] = "Greater Ward of Shielding" },
-	[2721] = { ["enchantId"] = "2721", ["effect"] = "+15 Spell Power and +14 Critical Strike Rating" }
+	[2721] = { ["enchantId"] = "2721", ["effect"] = "+15 Spell Power and +14 Critical Strike Rating" },
 	[3222] = { ["enchantId"] = "3222", ["effect"] = "+20 Agility" },
 	[3604] = { ["enchantId"] = "3604", ["effect"] = "Hyperspeed Accelerators" },
 	[3605] = { ["enchantId"] = "3605", ["effect"] = "Flexweave Underlay (+23 Agility)" },
