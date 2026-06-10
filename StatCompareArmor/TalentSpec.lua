@@ -1,4 +1,3 @@
-
 function StatCompare_CountSelectedTalents()
 	local tree = { 0, 0, 0 }
 	for i = 1, GetNumTalentTabs() do
