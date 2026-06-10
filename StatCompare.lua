@@ -91,9 +91,9 @@ STATCOMPARE_EFFECTS = {
 	{ effect = "DODGERATING"       , name = STATCOMPARE_DODGERATING                , format = "+%d"        , lformat = "%d"        , short = "MD"  , cat = "BON"                                    },
 	{ effect = "PARRYRATING"       , name = STATCOMPARE_PARRYRATING                , format = "+%d"        , lformat = "%d"        , short = "MP"  , cat = "BON"                                    },
 	{ effect = "BLOCKRATING"       , name = STATCOMPARE_BLOCKRATING                , format = "+%d"        , lformat = "%d"        , short = "MB"  , cat = "BON"                                    },
-	{ effect = "RANGEDCRITRATING"  , name = STATCOMPARE_RANGEDCRITRATING           , format = "+%d"        , lformat = "%d"        , short = "RC"  , cat = "BON"                                    },
-	{ effect = "RANGEDATTACKPOWER", name = STATCOMPARE_RANGEDATTACKPOWER          , format = "+%d"        , lformat = "%d"        , short = "RA"  , cat = "BON"   , opt="ShowRAP"        , show = 1 },
-	{ effect = "RANGEDCRIT"       , name = STATCOMPARE_RANGEDCRIT                 , format = "+%d%%"      , lformat = "%.2f%%"    , short = "RC"  , cat = "BON"   , opt="ShowRCrit"      , show = 1 },
+	{ effect = "RANGEDCRITRATING"  , name = STATCOMPARE_RANGEDCRITRATING           , format = "+%d"        , lformat = "%d"        , short = "MC"  , cat = "BON"                                    },
+	{ effect = "RANGEDATTACKPOWER", name = STATCOMPARE_RANGEDATTACKPOWER          , format = "+%d"        , lformat = "%d"        , short = "MA"  , cat = "BON"   , opt="ShowRAP"        , show = 1 },
+	{ effect = "RANGEDCRIT"       , name = STATCOMPARE_RANGEDCRIT                 , format = "+%d%%"      , lformat = "%.2f%%"    , short = "MC"  , cat = "BON"   , opt="ShowRCrit"      , show = 1 },
 --TODO	{ effect = "RANGEDHIT"        , name = STATCOMPARE_RANGEDHIT                  , format = "+%d%%"      , lformat = "%.2f%%"    , short = "RH"  , cat = "BON"   , opt="ShowRHit"       , show = 1 },
 
 	{ effect = "DMG"              , name = STATCOMPARE_DMG                        , format = "+%d"                                , short = "CD"  , cat = "SBON"                                    },
@@ -727,11 +727,17 @@ local function StatCompare_FormatExactBreakdown_335(total, base, positive, negat
 	return tostring(total)
 end
 
-local function StatCompare_SetExactRating_335(baseval, exactDisplay, key, ratingIndex)
+local function StatCompare_SetExactRating_335(baseval, exactDisplay, key, ratingIndex, showPercent)
 	local value = GetCombatRating(ratingIndex)
 	baseval[key] = value
+
 	if value and value ~= 0 then
-		exactDisplay[key] = tostring(value)
+		if showPercent then
+			local bonus = GetCombatRatingBonus(ratingIndex) or 0
+			exactDisplay[key] = value.." ("..format("%.2f%%", bonus)..")"
+		else
+			exactDisplay[key] = tostring(value)
+		end
 	end
 end
 
@@ -833,8 +839,8 @@ function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 		-- Inspected targets cannot be queried through GetCombatRating(), so their
 		-- comparison panel continues to show scanned equipment totals only.
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "HITRATING", CR_HIT_RANGED or 7)
-		StatCompare_SetExactRating_335(baseval, exactDisplay, "CRITRATING", CR_CRIT_RANGED or 10)
-		StatCompare_SetExactRating_335(baseval, exactDisplay, "HASTERATING", CR_HASTE_RANGED or 19)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "CRITRATING", CR_CRIT_RANGED or 10, true)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "HASTERATING", CR_HASTE_RANGED or 19, true)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "ARMORPENRATING", CR_ARMOR_PENETRATION or 25)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "EXPERTISERATING", CR_EXPERTISE or 24)
 		StatCompare_SetExactRating_335(baseval, exactDisplay, "RESILIENCERATING", CR_CRIT_TAKEN_MELEE or 15)
