@@ -1679,3 +1679,221 @@ function StatCompare_GetEquippedItemNamesAndEnchantsDisplayText(unit)
 	end
 	return retstr
 end
+
+-- WotLK 3.3.5 live enchant and socket resolver
+-- Uses the complete equipped-item hyperlink to resolve unknown enchants at
+-- runtime. The existing static table remains as a fallback for legacy entries.
+-- Inserted gems and socket-bonus text are displayed below each equipped item.
+
+StatCompare_ResolvedEnchants = StatCompare_ResolvedEnchants or {}
+StatCompare_GemDisplayCache = StatCompare_GemDisplayCache or {}
+
+local function StatCompare_GetLiveTooltip_335()
+	local tooltip = getglobal("StatCompareLiveEnchantTooltip335")
+	if not tooltip then
+		tooltip = CreateFrame("GameTooltip", "StatCompareLiveEnchantTooltip335", UIParent, "GameTooltipTemplate")
+	end
+	tooltip:SetOwner(UIParent, "ANCHOR_NONE")
+	return tooltip
+end
+
+local function StatCompare_NormalizeTooltipText_335(text)
+	if not text then return nil end
+	text = string.gsub(text, "|c%x%x%x%x%x%x%x%x", "")
+	text = string.gsub(text, "|r", "")
+	text = string.gsub(text, "^%s+", "")
+	text = string.gsub(text, "%s+$", "")
+	if text == "" then return nil end
+	return text
+end
+
+local function StatCompare_ReadTooltipLines_335(link)
+	local lines = {}
+	if not link or link == "" then return lines end
+
+	local tooltip = StatCompare_GetLiveTooltip_335()
+	tooltip:ClearLines()
+	tooltip:SetHyperlink(link)
+
+	for i = 1, tooltip:NumLines() do
+		local left = getglobal(tooltip:GetName().."TextLeft"..i)
+		local right = getglobal(tooltip:GetName().."TextRight"..i)
+
+		local leftText = left and StatCompare_NormalizeTooltipText_335(left:GetText()) or nil
+		local rightText = right and StatCompare_NormalizeTooltipText_335(right:GetText()) or nil
+
+		if leftText then table.insert(lines, leftText) end
+		if rightText then table.insert(lines, rightText) end
+	end
+
+	tooltip:Hide()
+	return lines
+end
+
+local function StatCompare_RemovePermanentEnchantFromLink_335(link)
+	if not link then return nil end
+
+	local result, count = string.gsub(
+		link,
+		"(|Hitem:%-?%d+:)%-?%d+",
+		function(prefix) return prefix.."0" end,
+		1
+	)
+
+	if count == 0 then
+		result, count = string.gsub(
+			link,
+			"^(item:%-?%d+:)%-?%d+",
+			function(prefix) return prefix.."0" end,
+			1
+		)
+	end
+
+	if count == 0 then return nil end
+	return result
+end
+
+local function StatCompare_GetTooltipDifference_335(fullLines, plainLines)
+	local remaining = {}
+	local added = {}
+	local seen = {}
+
+	for _, text in ipairs(plainLines) do
+		remaining[text] = (remaining[text] or 0) + 1
+	end
+
+	for _, text in ipairs(fullLines) do
+		local count = remaining[text] or 0
+		if count > 0 then
+			remaining[text] = count - 1
+		elseif not seen[text] then
+			seen[text] = true
+			table.insert(added, text)
+		end
+	end
+
+	return added
+end
+
+function StatCompare_GetResolvedEnchantText(link, enchantId)
+	local id = tonumber(enchantId)
+	if not id or id <= 0 then return nil end
+
+	-- Prefer known mappings where available. They are exact and avoid tooltip work.
+	local known = StatCompare_GetEnchantName(id)
+	if known then return known end
+
+	if StatCompare_ResolvedEnchants[id] then
+		return StatCompare_ResolvedEnchants[id]
+	end
+
+	local plainLink = StatCompare_RemovePermanentEnchantFromLink_335(link)
+	if not plainLink or plainLink == link then return nil end
+
+	local fullLines = StatCompare_ReadTooltipLines_335(link)
+	local plainLines = StatCompare_ReadTooltipLines_335(plainLink)
+	local added = StatCompare_GetTooltipDifference_335(fullLines, plainLines)
+
+	if table.getn(added) == 0 then return nil end
+
+	local resolved = table.concat(added, " / ")
+	StatCompare_ResolvedEnchants[id] = resolved
+	return resolved
+end
+
+local function StatCompare_IsSocketLine_335(text)
+	if not text then return false end
+	if text == "Meta Socket" then return true end
+	if text == "Prismatic Socket" then return true end
+	return string.find(text, " Socket$") ~= nil and string.find(text, "^Socket Bonus:") == nil
+end
+
+function StatCompare_GetSocketedGemDisplayText(link)
+	if not link then return "" end
+
+	if StatCompare_GemDisplayCache[link] ~= nil then
+		return StatCompare_GemDisplayCache[link]
+	end
+
+	local sockets = {}
+	local socketSeen = {}
+	local gems = {}
+	local socketBonus
+	local tooltipLines = StatCompare_ReadTooltipLines_335(link)
+
+	for _, text in ipairs(tooltipLines) do
+		if StatCompare_IsSocketLine_335(text) and not socketSeen[text] then
+			socketSeen[text] = true
+			table.insert(sockets, text)
+		elseif string.find(text, "^Socket Bonus:") then
+			socketBonus = text
+		end
+	end
+
+	if GetItemGem then
+		for socketIndex = 1, 4 do
+			local gemName, gemLink = GetItemGem(link, socketIndex)
+			if gemLink then
+				table.insert(gems, gemLink)
+			elseif gemName then
+				table.insert(gems, gemName)
+			end
+		end
+	end
+
+	local parts = {}
+	if table.getn(sockets) > 0 then
+		table.insert(parts, "      Sockets: "..table.concat(sockets, ", ").."\n")
+	end
+	if table.getn(gems) > 0 then
+		table.insert(parts, "      Gems: "..table.concat(gems, ", ").."\n")
+	end
+	if socketBonus then
+		table.insert(parts, "      "..socketBonus.."\n")
+	end
+
+	local result = table.concat(parts, "")
+	StatCompare_GemDisplayCache[link] = result
+	return result
+end
+
+function StatCompare_GetEquippedItemNamesAndEnchantsDisplayText(unit)
+	local sunit = unit or "target"
+	local retstr = GREEN_FONT_COLOR_CODE..STATCOMPARE_EQUIPPED..":\n"..FONT_COLOR_CODE_CLOSE
+	local DISPLAYORDER = {1, 2, 3, 5, 15, 9, 10, 6, 7, 8, 11, 12, 13, 14, 18, 16, 17}
+
+	for _, i in ipairs(DISPLAYORDER) do
+		if i ~= 99 then
+			local slotname = STATCOMPARE_UNITSLOT[i]
+			local link = GetInventoryItemLink(sunit, i)
+
+			if link then
+				local _, itemId, enchantId = StatCompare_splitlink(link)
+				local enchantName = StatCompare_GetResolvedEnchantText(link, enchantId)
+				local enchantstr = enchantName
+					and " > "..enchantName
+					or (enchantId and tonumber(enchantId) > 0
+						and " > Unknown Enchant - "..GREEN_FONT_COLOR_CODE..enchantId..FONT_COLOR_CODE_CLOSE
+						or "")
+
+				if StatCompare_IsDebugMode then
+					enchantstr = enchantstr
+						..(enchantId and tonumber(enchantId) > 0
+							and " (ID:"..GREEN_FONT_COLOR_CODE..enchantId..FONT_COLOR_CODE_CLOSE..")"
+							or "")
+				end
+
+				retstr = retstr
+					.."  "
+					..StatComparePaintText("X", (slotname and slotname or "?")..": ")
+					..link
+					..enchantstr
+					.."\n"
+
+				retstr = retstr..StatCompare_GetSocketedGemDisplayText(link)
+			end
+		end
+	end
+
+	return retstr
+end
