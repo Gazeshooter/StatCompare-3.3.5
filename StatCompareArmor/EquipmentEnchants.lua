@@ -1840,16 +1840,149 @@ local function StatCompare_GetTooltipDifference_335(fullLines, plainLines)
 	return added
 end
 
-function StatCompare_GetResolvedEnchantText(link, enchantId)
+local function StatCompare_GetRatingPercentForAmount_335(amount, ratingIndex, unit)
+	amount = tonumber(amount)
+	if not amount or not ratingIndex then return nil end
+
+	-- For the local player, derive the conversion directly from Blizzard's
+	-- combat-rating API. This stays accurate for the player's current level.
+	if unit == "player" and GetCombatRating and GetCombatRatingBonus then
+		local currentRating = GetCombatRating(ratingIndex) or 0
+		local currentPercent = GetCombatRatingBonus(ratingIndex) or 0
+
+		if currentRating > 0 and currentPercent > 0 then
+			return amount * currentPercent / currentRating
+		end
+	end
+
+	-- WotLK level-80 fallback. Haste, hit and crit use 32.79 rating per 1%.
+	-- This also allows inspected level-80 targets to show a useful percentage.
+	if not unit or not UnitLevel or UnitLevel(unit) == 80 then
+		return amount / 32.79
+	end
+
+	return nil
+end
+
+local function StatCompare_FormatTimedEnchantEffect_335(amount, label, duration, ratingIndex, unit)
+	amount = tonumber(amount)
+	duration = tonumber(duration)
+	if not amount or not label or not duration then return nil end
+
+	local percent = StatCompare_GetRatingPercentForAmount_335(amount, ratingIndex, unit)
+	local percentText = percent and format(" (%.2f%%)", percent) or ""
+
+	return "+"..amount.." "..label..percentText.." "..duration.."sec."
+end
+
+local StatCompare_TimedEnchantOverrides_335 = {
+	-- Engineering: Hyperspeed Accelerators.
+	-- The equipped-item tooltip commonly exposes only the tinker name, so keep
+	-- an explicit effect mapping while still using live rating conversion.
+	[3604] = {
+		amount = 340,
+		label = "Haste",
+		duration = 12,
+		ratingIndex = CR_HASTE_RANGED or 19,
+	},
+}
+
+local StatCompare_TimedRatingPatterns_335 = {
+	{ phrase = "haste rating", label = "Haste", ratingIndex = CR_HASTE_RANGED or 19 },
+	{ phrase = "critical strike rating", label = "Crit", ratingIndex = CR_CRIT_RANGED or 10 },
+	{ phrase = "hit rating", label = "Hit", ratingIndex = CR_HIT_RANGED or 7 },
+	{ phrase = "armor penetration rating", label = "ArP", ratingIndex = CR_ARMOR_PENETRATION or 25 },
+	{ phrase = "expertise rating", label = "Expertise", ratingIndex = CR_EXPERTISE or 24 },
+	{ phrase = "resilience rating", label = "Resil", ratingIndex = CR_CRIT_TAKEN_MELEE or 15 },
+	{ phrase = "defense rating", label = "Defense", ratingIndex = CR_DEFENSE_SKILL or 2 },
+	{ phrase = "dodge rating", label = "Dodge", ratingIndex = CR_DODGE or 3 },
+	{ phrase = "parry rating", label = "Parry", ratingIndex = CR_PARRY or 4 },
+	{ phrase = "block rating", label = "Block", ratingIndex = CR_BLOCK or 5 },
+}
+
+local StatCompare_TimedFlatStatPatterns_335 = {
+	{ phrase = "attack power", label = "AP" },
+	{ phrase = "ranged attack power", label = "RAP" },
+	{ phrase = "spell power", label = "SP" },
+	{ phrase = "agility", label = "Agi" },
+	{ phrase = "strength", label = "Str" },
+	{ phrase = "stamina", label = "Sta" },
+	{ phrase = "intellect", label = "Int" },
+	{ phrase = "spirit", label = "Spi" },
+}
+
+local function StatCompare_ParseTimedEnchantText_335(text, unit)
+	if not text then return nil end
+
+	local lower = string.lower(text)
+
+	for _, entry in ipairs(StatCompare_TimedRatingPatterns_335) do
+		local amount, duration = string.match(
+			lower,
+			entry.phrase.."%s+by%s+(%d+)%s+for%s+(%d+)%s+sec"
+		)
+
+		if amount and duration then
+			return StatCompare_FormatTimedEnchantEffect_335(
+				amount,
+				entry.label,
+				duration,
+				entry.ratingIndex,
+				unit
+			)
+		end
+	end
+
+	for _, entry in ipairs(StatCompare_TimedFlatStatPatterns_335) do
+		local amount, duration = string.match(
+			lower,
+			entry.phrase.."%s+by%s+(%d+)%s+for%s+(%d+)%s+sec"
+		)
+
+		if amount and duration then
+			return StatCompare_FormatTimedEnchantEffect_335(
+				amount,
+				entry.label,
+				duration,
+				nil,
+				unit
+			)
+		end
+	end
+
+	return nil
+end
+
+local function StatCompare_GetTimedEnchantOverride_335(enchantId, unit)
+	local entry = StatCompare_TimedEnchantOverrides_335[tonumber(enchantId)]
+	if not entry then return nil end
+
+	return StatCompare_FormatTimedEnchantEffect_335(
+		entry.amount,
+		entry.label,
+		entry.duration,
+		entry.ratingIndex,
+		unit
+	)
+end
+
+function StatCompare_GetResolvedEnchantText(link, enchantId, unit)
 	local id = tonumber(enchantId)
 	if not id or id <= 0 then return nil end
 
+	local timedOverride = StatCompare_GetTimedEnchantOverride_335(id, unit)
+	if timedOverride then return timedOverride end
+
 	-- Prefer known mappings where available. They are exact and avoid tooltip work.
 	local known = StatCompare_GetEnchantName(id)
-	if known then return StatCompare_ShortenDisplayText_335(known) end
+	if known then
+		return StatCompare_ParseTimedEnchantText_335(known, unit)
+			or StatCompare_ShortenDisplayText_335(known)
+	end
 
 	if StatCompare_ResolvedEnchants[id] then
-		return StatCompare_ShortenDisplayText_335(StatCompare_ResolvedEnchants[id])
+		return StatCompare_ParseTimedEnchantText_335(StatCompare_ResolvedEnchants[id], unit)
+			or StatCompare_ShortenDisplayText_335(StatCompare_ResolvedEnchants[id])
 	end
 
 	local plainLink = StatCompare_RemovePermanentEnchantFromLink_335(link)
@@ -1861,7 +1994,9 @@ function StatCompare_GetResolvedEnchantText(link, enchantId)
 
 	if table.getn(added) == 0 then return nil end
 
-	local resolved = StatCompare_ShortenDisplayText_335(table.concat(added, " / "))
+	local rawResolved = table.concat(added, " / ")
+	local resolved = StatCompare_ParseTimedEnchantText_335(rawResolved, unit)
+		or StatCompare_ShortenDisplayText_335(rawResolved)
 	StatCompare_ResolvedEnchants[id] = resolved
 	return resolved
 end
@@ -2110,7 +2245,7 @@ function StatCompare_GetEquippedItemNamesAndEnchantsDisplayText(unit)
 					end
 				end
 
-				local enchantName = StatCompare_GetResolvedEnchantText(link, enchantId)
+				local enchantName = StatCompare_GetResolvedEnchantText(link, enchantId, sunit)
 				if enchantName then
 					table.insert(suffixParts, enchantName)
 				elseif enchantId and tonumber(enchantId) > 0 then
