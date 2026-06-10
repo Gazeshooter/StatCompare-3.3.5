@@ -1547,6 +1547,18 @@ StatCompare_EnchantsById = {
 	[2719] = { ["enchantId"] = "2719", ["effect"] = "Lesser Ward of Shielding" },
 	[2720] = { ["enchantId"] = "2720", ["effect"] = "Greater Ward of Shielding" },
 	[2721] = { ["enchantId"] = "2721", ["effect"] = "+15 Spell Power and +14 Critical Strike Rating" }
+	[3222] = { ["enchantId"] = "3222", ["effect"] = "+20 Agility" },
+	[3604] = { ["enchantId"] = "3604", ["effect"] = "Hyperspeed Accelerators" },
+	[3605] = { ["enchantId"] = "3605", ["effect"] = "Flexweave Underlay (+23 Agility)" },
+	[3606] = { ["enchantId"] = "3606", ["effect"] = "Nitro Boosts (+24 Critical Strike Rating)" },
+	[3608] = { ["enchantId"] = "3608", ["effect"] = "+40 Ranged Critical Strike Rating" },
+	[3789] = { ["enchantId"] = "3789", ["effect"] = "Berserking" },
+	[3808] = { ["enchantId"] = "3808", ["effect"] = "+40 Attack Power and +15 Critical Strike Rating" },
+	[3817] = { ["enchantId"] = "3817", ["effect"] = "+50 Attack Power and +20 Critical Strike Rating" },
+	[3823] = { ["enchantId"] = "3823", ["effect"] = "+75 Attack Power and +22 Critical Strike Rating" },
+	[3827] = { ["enchantId"] = "3827", ["effect"] = "+110 Attack Power" },
+	[3832] = { ["enchantId"] = "3832", ["effect"] = "+10 All Stats" },
+	[3845] = { ["enchantId"] = "3845", ["effect"] = "+50 Attack Power" }
 }
 
 
