@@ -701,16 +701,78 @@ function SCHideUIPanel(frame)
 	oldHideUIPanel(frame);
 end
 
+local function StatCompare_FormatSignedNumber_335(value)
+	value = tonumber(value) or 0
+	if value > 0 then
+		return " +"..value
+	elseif value < 0 then
+		return " "..value
+	end
+	return ""
+end
+
+local function StatCompare_FormatExactBreakdown_335(total, base, positive, negative)
+	total = tonumber(total) or 0
+	base = tonumber(base) or total
+	positive = tonumber(positive) or 0
+	negative = tonumber(negative) or 0
+
+	if positive ~= 0 or negative ~= 0 then
+		return total.." ("..base
+			..StatCompare_FormatSignedNumber_335(positive)
+			..StatCompare_FormatSignedNumber_335(negative)
+			..")"
+	end
+
+	return tostring(total)
+end
+
+local function StatCompare_SetExactRating_335(baseval, exactDisplay, key, ratingIndex)
+	local value = GetCombatRating(ratingIndex)
+	baseval[key] = value
+	if value and value ~= 0 then
+		exactDisplay[key] = tostring(value)
+	end
+end
+
 function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 	local retstr,cat,val,lval = "","","","","";
 	local i;
 	local baseval = {};
+	local exactDisplay = {};
+
 	if(bSelfStat==1) then
-		_, baseval["STR"], _, _ = UnitStat("player", 1);
-		_, baseval["AGI"], _, _ = UnitStat("player", 2);
-		_, baseval["STA"], _, _ = UnitStat("player", 3);
-		_, baseval["INT"], _, _ = UnitStat("player", 4);
-		_, baseval["SPI"], _, _ = UnitStat("player", 5);
+		local stat, effectiveStat, posBuff, negBuff
+
+		stat, effectiveStat, posBuff, negBuff = UnitStat("player", 1)
+		baseval["STR"] = effectiveStat
+		exactDisplay["STR"] = StatCompare_FormatExactBreakdown_335(
+			effectiveStat, stat - posBuff - negBuff, posBuff, negBuff
+		)
+
+		stat, effectiveStat, posBuff, negBuff = UnitStat("player", 2)
+		baseval["AGI"] = effectiveStat
+		exactDisplay["AGI"] = StatCompare_FormatExactBreakdown_335(
+			effectiveStat, stat - posBuff - negBuff, posBuff, negBuff
+		)
+
+		stat, effectiveStat, posBuff, negBuff = UnitStat("player", 3)
+		baseval["STA"] = effectiveStat
+		exactDisplay["STA"] = StatCompare_FormatExactBreakdown_335(
+			effectiveStat, stat - posBuff - negBuff, posBuff, negBuff
+		)
+
+		stat, effectiveStat, posBuff, negBuff = UnitStat("player", 4)
+		baseval["INT"] = effectiveStat
+		exactDisplay["INT"] = StatCompare_FormatExactBreakdown_335(
+			effectiveStat, stat - posBuff - negBuff, posBuff, negBuff
+		)
+
+		stat, effectiveStat, posBuff, negBuff = UnitStat("player", 5)
+		baseval["SPI"] = effectiveStat
+		exactDisplay["SPI"] = StatCompare_FormatExactBreakdown_335(
+			effectiveStat, stat - posBuff - negBuff, posBuff, negBuff
+		)
 
 		_, baseval["ARCANERES"], _, _ = UnitResistance("player",6);
 		_, baseval["FIRERES"], _, _ = UnitResistance("player",2);
@@ -728,29 +790,58 @@ function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 		if(baseval["PARRY"] == 0) then
 			baseval["PARRY"] = nil;
 		end
-		baseval["ATTACKPOWER"], posBuff, negBuff = UnitAttackPower("player");
-		baseval["ATTACKPOWER"] = baseval["ATTACKPOWER"] + posBuff + negBuff;
-		baseval["RANGEDATTACKPOWER"], posBuff, negBuff = UnitRangedAttackPower("player");
-		baseval["RANGEDATTACKPOWER"] = baseval["RANGEDATTACKPOWER"] + posBuff + negBuff;
+
+		local attackPowerBase, attackPowerPositive, attackPowerNegative =
+			UnitAttackPower("player")
+		baseval["ATTACKPOWER"] =
+			attackPowerBase + attackPowerPositive + attackPowerNegative
+		exactDisplay["ATTACKPOWER"] = StatCompare_FormatExactBreakdown_335(
+			baseval["ATTACKPOWER"],
+			attackPowerBase,
+			attackPowerPositive,
+			attackPowerNegative
+		)
+
+		local rangedAttackPowerBase, rangedAttackPowerPositive, rangedAttackPowerNegative =
+			UnitRangedAttackPower("player")
+		baseval["RANGEDATTACKPOWER"] =
+			rangedAttackPowerBase + rangedAttackPowerPositive + rangedAttackPowerNegative
+		exactDisplay["RANGEDATTACKPOWER"] = StatCompare_FormatExactBreakdown_335(
+			baseval["RANGEDATTACKPOWER"],
+			rangedAttackPowerBase,
+			rangedAttackPowerPositive,
+			rangedAttackPowerNegative
+		)
+
 		baseval["DEFENSE"], armorDefense = UnitDefense("player");
 		baseval["DEFENSE"] = baseval["DEFENSE"] + armorDefense;
 		baseval["HEALTH"] = UnitHealthMax("player");
-		_, baseval["ARMOR"], _, _, _ = UnitArmor("player");
+
+		local armorBase, effectiveArmor, _, armorPositive, armorNegative =
+			UnitArmor("player")
+		baseval["ARMOR"] = effectiveArmor
+		exactDisplay["ARMOR"] = StatCompare_FormatExactBreakdown_335(
+			effectiveArmor,
+			armorBase,
+			armorPositive,
+			armorNegative
+		)
+
 		baseval["MANA"] = UnitManaMax("player");
+
 		-- WotLK 3.3.5 raw combat-rating totals for the local player.
 		-- Inspected targets cannot be queried through GetCombatRating(), so their
 		-- comparison panel continues to show scanned equipment totals only.
-		baseval["HITRATING"] = GetCombatRating(CR_HIT_RANGED or 7);
-		baseval["CRITRATING"] = GetCombatRating(CR_CRIT_RANGED or 10);
-		baseval["HASTERATING"] = GetCombatRating(CR_HASTE_RANGED or 19);
-		baseval["ARMORPENRATING"] = GetCombatRating(CR_ARMOR_PENETRATION or 25);
-		baseval["EXPERTISERATING"] = GetCombatRating(CR_EXPERTISE or 24);
-		baseval["RESILIENCERATING"] = GetCombatRating(CR_CRIT_TAKEN_MELEE or 15);
-		baseval["DEFENSERATING"] = GetCombatRating(CR_DEFENSE_SKILL or 2);
-		baseval["DODGERATING"] = GetCombatRating(CR_DODGE or 3);
-		baseval["PARRYRATING"] = GetCombatRating(CR_PARRY or 4);
-		baseval["BLOCKRATING"] = GetCombatRating(CR_BLOCK or 5);
-
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "HITRATING", CR_HIT_RANGED or 7)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "CRITRATING", CR_CRIT_RANGED or 10)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "HASTERATING", CR_HASTE_RANGED or 19)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "ARMORPENRATING", CR_ARMOR_PENETRATION or 25)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "EXPERTISERATING", CR_EXPERTISE or 24)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "RESILIENCERATING", CR_CRIT_TAKEN_MELEE or 15)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "DEFENSERATING", CR_DEFENSE_SKILL or 2)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "DODGERATING", CR_DODGE or 3)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "PARRYRATING", CR_PARRY or 4)
+		StatCompare_SetExactRating_335(baseval, exactDisplay, "BLOCKRATING", CR_BLOCK or 5)
 	end
 	--DEFAULT_CHAT_FRAME:AddMessage("Entering GetTooltipText");
 	for i,e in pairs(STATCOMPARE_EFFECTS) do
@@ -759,7 +850,11 @@ function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 			continue = false
 		end
 
-		if continue and BCSLib and BCSLib.StatHasCallback and BCSLib:StatHasCallback(e.effect) then
+		if continue and bSelfStat == 1 and exactDisplay[e.effect] then
+			-- For the local player, use Blizzard's live API breakdown rather than
+			-- presenting a tooltip-derived gear scan as though it were authoritative.
+			val = exactDisplay[e.effect]
+		elseif continue and BCSLib and BCSLib.StatHasCallback and BCSLib:StatHasCallback(e.effect) then
 			local bcs_stat = BCSLib:GetStat(e.effect, (bSelfStat == 1 and "player" or "target"))
 			if bcs_stat ~= nil and bcs_stat ~= "" and bcs_stat ~= 0 then 
 				val =  bcs_stat.." *"
