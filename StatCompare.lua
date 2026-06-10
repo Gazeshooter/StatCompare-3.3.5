@@ -1233,9 +1233,12 @@ function StatCompare_UpdateFrameText(frameName, textbody, titletext)
 	end
 	local height = text:GetHeight() + title:GetHeight() + paddingHeightForAesthetics;
 	local newwidth = text:GetWidth() + paddingWidthForAesthetics;
-	local framewidth = frame:GetWidth();
-	if newwidth < framewidth then
-		newwidth = framewidth
+	-- Allow the frame to shrink again after displaying a character with a
+	-- longer line. The original code only ever increased the width, leaving
+	-- persistent blank space after compact socket details were introduced.
+	local minimumFrameWidth = 350;
+	if newwidth < minimumFrameWidth then
+		newwidth = minimumFrameWidth
 	end
 	local iconwidth = 20*4;
 	local titlewidth = title:GetWidth() + iconwidth;
