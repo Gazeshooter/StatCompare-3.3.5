@@ -18,6 +18,9 @@ This fork ports StatCompare v2.0 from 1.12.1 to 3.3.5a and expands the equipment
 
 ## Screenshots
 
+<img width="549" height="875" alt="image" src="https://github.com/user-attachments/assets/4193217c-02db-4164-98ca-2bf4d234319a" />
+
+
 ## Installation
 Unzip to Interface\Addons, rename from ``StatCompare-3.3.5-master`` to ``StatCompare``
 
