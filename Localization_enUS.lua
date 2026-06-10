@@ -100,7 +100,7 @@ function SC_Localization_enUS()
 	STATCOMPARE_TOBLOCK	= "Chance to block";
 	STATCOMPARE_DODGE	= "Dodge";
 	STATCOMPARE_PARRY	= "Parry";
-	STATCOMPARE_ATTACKPOWER = "Attack Power";
+	STATCOMPARE_ATTACKPOWER = "Melee AP";
 	STATCOMPARE_ATTACKPOWERUNDEAD = "AP against Undead";
 	STATCOMPARE_CRIT	= "Crit. hits";
 	STATCOMPARE_RANGEDATTACKPOWER = "Ranged AP";
@@ -403,3 +403,4 @@ function SC_Localization_enUS()
 	STATCOMPARE_SHADOWBURN		= "Shadow Burn";
 	STATCOMPARE_SOUL_FIRE		= "Soul Fire";
 end
+
