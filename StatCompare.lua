@@ -935,6 +935,8 @@ function StatCompare_InspectPaperDollItemSlotButton_OnClick(self, button)
     return scoldInspectPaperDollItemSlotButton_OnClick(self, button)
 end
 
+function StatCompare_ItemCollectionFrame_OnLoad()
+end
 
 function StatCompare_ItemCollectionFrame_OnShow()
 	StatCompare_ItemCollection_ScrollFrame_Update();
@@ -1052,7 +1054,7 @@ StatCompare_ItemRarity_DROPDOWN_LIST = {
 function StatCompare_ItemRarityDropDown_OnLoad()
 	UIDropDownMenu_Initialize(StatCompare_ItemRarityDropDown, StatCompare_ItemRarityDropDown_Initialize);
 	UIDropDownMenu_SetSelectedID(StatCompare_ItemRarityDropDown,1);
-	UIDropDownMenu_SetWidth(70);
+	UIDropDownMenu_SetWidth(StatCompare_ItemRarityDropDown, 70);
 end
 
 function StatCompare_ItemRarityDropDown_Initialize()
@@ -1090,7 +1092,7 @@ StatCompare_ItemType_DROPDOWN_LIST = {
 function StatCompare_ItemTypeDropDown_OnLoad()
 	UIDropDownMenu_Initialize(StatCompare_ItemTypeDropDown, StatCompare_ItemTypeDropDown_Initialize);
 	UIDropDownMenu_SetSelectedID(StatCompare_ItemTypeDropDown,1);
-	UIDropDownMenu_SetWidth(70);
+	UIDropDownMenu_SetWidth(StatCompare_ItemTypeDropDown, 70);
 end
 
 function StatCompare_ItemTypeDropDown_Initialize()
