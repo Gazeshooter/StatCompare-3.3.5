@@ -1903,15 +1903,27 @@ end
 local function StatCompare_IsGemMetadataLine_335(text, gemName)
 	if not text then return true end
 	if gemName and text == gemName then return true end
-	if text == "Gem" then return true end
-	if string.find(text, "^Item Level") then return true end
-	if string.find(text, "^Requires") then return true end
-	-- Some 3.3.5 clients wrap this helper text in quotation marks, for
-	-- example: "Matches a Red Socket."  Match it anywhere in the line.
-	if string.find(text, "Matches a ", 1, true) then return true end
-	if string.find(text, "^Unique") then return true end
-	if string.find(text, "^Sell Price") then return true end
-	if string.find(text, "^Socket") then return true end
+
+	local lower = string.lower(text)
+
+	if lower == "gem" then return true end
+	if string.find(lower, "^item level") then return true end
+	if string.find(lower, "^requires") then return true end
+	if string.find(lower, "^unique") then return true end
+	if string.find(lower, "^sell price") then return true end
+	if string.find(lower, "^socket") then return true end
+
+	-- Socket compatibility helper lines are metadata, not gem effects.
+	-- Handle quoted, capitalized and alternate wording variants such as:
+	--   "Matches a Red Socket."
+	--   "Matches any socket."
+	--   "Fits in a Meta Socket."
+	--   "Only fits in a Cogwheel Socket."
+	if string.find(lower, "socket", 1, true) then
+		if string.find(lower, "match", 1, true) then return true end
+		if string.find(lower, "fit", 1, true) then return true end
+	end
+
 	return false
 end
 
