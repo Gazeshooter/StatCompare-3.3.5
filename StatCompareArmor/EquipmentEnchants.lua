@@ -1841,19 +1841,25 @@ function StatCompare_GetSocketedGemDisplayText(link)
 		end
 	end
 
-	local parts = {}
+	local details = {}
 	if table.getn(sockets) > 0 then
-		table.insert(parts, "      Sockets: "..table.concat(sockets, ", ").."\n")
+		table.insert(details, "Sockets: "..table.concat(sockets, ", "))
 	end
 	if table.getn(gems) > 0 then
-		table.insert(parts, "      Gems: "..table.concat(gems, ", ").."\n")
+		table.insert(details, "Gems: "..table.concat(gems, ", "))
 	end
 	if socketBonus then
-		table.insert(parts, "      "..socketBonus.."\n")
+		table.insert(details, socketBonus)
 	end
 
-	local result = table.concat(parts, "")
-	StatCompare_GemDisplayCache[link] = result
+	local result = ""
+	if table.getn(details) > 0 then
+		result = "      "..table.concat(details, " | ").."\n"
+		-- Only cache successful reads. Inspected-player item data can arrive
+		-- after the first scan; caching an empty result would hide later data.
+		StatCompare_GemDisplayCache[link] = result
+	end
+
 	return result
 end
 
