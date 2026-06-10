@@ -625,6 +625,11 @@ function SCShowFrame(frame,target,tiptitle,tiptext,anchorx,anchory)
 		if score and score > 0 then frame:SetHeight(frame:GetHeight()+30) end
 	end
 
+	-- Reused comparison frames can accumulate anchors when switching between
+	-- the character panel and inspect panels. Multiple anchors stretch the frame
+	-- horizontally even after SetWidth() runs. Apply exactly one default anchor.
+	frame:ClearAllPoints();
+
 	if(IsAddOnLoaded("oSkin") or IsAddOnLoaded("Skinner")) then
 		if(target:GetName() == "InspectFrame" or target:GetName() == "PaperDollFrame") then
 			frame:SetPoint("TOPLEFT", target:GetName(), "TOPRIGHT", anchorx + 30, anchory + 12);
