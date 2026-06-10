@@ -1707,6 +1707,53 @@ local function StatCompare_NormalizeTooltipText_335(text)
 	return text
 end
 
+local function StatCompare_ShortenDisplayText_335(text)
+	if not text then return nil end
+
+	-- Keep the scanner data unchanged. This function is used only when
+	-- rendering readable enchant, gem and socket-bonus descriptions.
+	local replacements = {
+		{"Ranged Critical Strike Rating", "Ranged Crit"},
+		{"Critical Strike Rating", "Crit"},
+		{"Armor Penetration Rating", "ArP"},
+		{"Ranged Attack Power", "RAP"},
+		{"Attack Power", "AP"},
+		{"Spell Penetration", "Spell Pen"},
+		{"Spell Power", "SP"},
+		{"Expertise Rating", "Expertise"},
+		{"Resilience Rating", "Resil"},
+		{"Defense Rating", "Defense"},
+		{"Dodge Rating", "Dodge"},
+		{"Parry Rating", "Parry"},
+		{"Block Rating", "Block"},
+		{"Shield Block Rating", "Block"},
+		{"Hit Rating", "Hit"},
+		{"Haste Rating", "Haste"},
+		{"Agility", "Agi"},
+		{"Strength", "Str"},
+		{"Stamina", "Sta"},
+		{"Intellect", "Int"},
+		{"Spirit", "Spi"},
+		{"All Stats", "Stats"},
+		{"Mana every 5 seconds", "MP5"},
+		{"Mana per 5 sec", "MP5"},
+		{"Health every 5 seconds", "HP5"},
+		{"Health per 5 sec", "HP5"},
+		{"Socket Bonus:", "Bonus:"},
+	}
+
+	for _, replacement in ipairs(replacements) do
+		text = string.gsub(text, replacement[1], replacement[2])
+	end
+
+	-- Compact joined stat lists while leaving named effects untouched.
+	if string.find(text, "%+%d+") and string.find(text, " and ", 1, true) then
+		text = string.gsub(text, " and ", ", ")
+	end
+
+	return text
+end
+
 local function StatCompare_ReadTooltipLines_335(link)
 	local lines = {}
 	if not link or link == "" then return lines end
@@ -1781,10 +1828,10 @@ function StatCompare_GetResolvedEnchantText(link, enchantId)
 
 	-- Prefer known mappings where available. They are exact and avoid tooltip work.
 	local known = StatCompare_GetEnchantName(id)
-	if known then return known end
+	if known then return StatCompare_ShortenDisplayText_335(known) end
 
 	if StatCompare_ResolvedEnchants[id] then
-		return StatCompare_ResolvedEnchants[id]
+		return StatCompare_ShortenDisplayText_335(StatCompare_ResolvedEnchants[id])
 	end
 
 	local plainLink = StatCompare_RemovePermanentEnchantFromLink_335(link)
@@ -1796,7 +1843,7 @@ function StatCompare_GetResolvedEnchantText(link, enchantId)
 
 	if table.getn(added) == 0 then return nil end
 
-	local resolved = table.concat(added, " / ")
+	local resolved = StatCompare_ShortenDisplayText_335(table.concat(added, " / "))
 	StatCompare_ResolvedEnchants[id] = resolved
 	return resolved
 end
@@ -1895,6 +1942,7 @@ local function StatCompare_GetGemEffectText_335(gemName, gemLink)
 	end
 
 	if result then
+		result = StatCompare_ShortenDisplayText_335(result)
 		StatCompare_GemEffectCache[cacheKey] = result
 	end
 
@@ -1921,7 +1969,7 @@ function StatCompare_GetSocketedGemDisplayText(link)
 			table.insert(sockets, text)
 		elseif string.find(text, "^Socket Bonus:")
 			and StatCompare_IsActiveSocketBonus_335(row) then
-			activeSocketBonus = text
+			activeSocketBonus = StatCompare_ShortenDisplayText_335(text)
 		end
 	end
 
