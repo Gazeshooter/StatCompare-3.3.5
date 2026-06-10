@@ -788,7 +788,7 @@ function StatScanner_GetStatsDisplayText(bonuses,bSelfStat)
 				retstr = retstr.. " "
 			end
 
-			retstr = retstr .. StatComparePaintText(e.short,e.name)..": \t";
+			retstr = retstr .. StatComparePaintText(e.short,e.name)..": ";
 			if(SC_BuffScanner_bonuses and SC_BuffScanner_bonuses[e.effect]) then
 				retstr = retstr.. GREEN_FONT_COLOR_CODE..val..FONT_COLOR_CODE_CLOSE;
 			else
@@ -842,9 +842,14 @@ function StatCompare_GetTooltipText(bonuses,bSelfStat)
 		retstr= retstr..StatCompare_GetSpellsTooltipText(StatScanner_bonuses, bSelfStat == 1 and "player" or "target");
 	end
 
-	if StatCompare_GetDisplayGroupSetting(bSelfStat, "EquippedItems") or StatCompare_GetDisplayGroupSetting(bSelfStat, "EquippedEnchants") == true and StatCompare_GetEquippedItemNamesAndEnchantsDisplayText then
-		local itemsandenchants=StatCompare_GetEquippedItemNamesAndEnchantsDisplayText(bSelfStat==1 and "player" or "target")
-		retstr=retstr.."\n\n"..itemsandenchants
+	if (
+		StatCompare_GetDisplayGroupSetting(bSelfStat, "EquippedItems")
+		or StatCompare_GetDisplayGroupSetting(bSelfStat, "EquippedEnchants")
+	) and StatCompare_GetEquippedItemNamesAndEnchantsDisplayText then
+		local itemsandenchants = StatCompare_GetEquippedItemNamesAndEnchantsDisplayText(
+			bSelfStat == 1 and "player" or "target"
+		)
+		retstr = retstr.."\n\n"..itemsandenchants
 	end
 	
 	if StatCompare_IsAllHidden(bSelfStat) and nvl(StatCompare_IsTutorialInstalled,false) == true then
